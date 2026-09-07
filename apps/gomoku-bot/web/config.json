@@ -1,0 +1,11 @@
+{
+  "nameZh": "五子棋 Bot",
+  "nameEn": "Gomoku Bot",
+  "description": "离线五子棋对局应用，可选择先手和 Bot 难度，支持棋局保存、导入和复盘。",
+  "category": "Games",
+  "topics": ["五子棋", "人机对弈", "棋局复盘"],
+  "author": "Alex",
+  "email": "alex@example.com",
+  "version": "1.3.0",
+  "permissions": ["downloads"]
+}

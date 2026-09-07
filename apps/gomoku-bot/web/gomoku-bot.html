@@ -1,0 +1,2018 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>五子棋 Bot</title>
+  <script src="./gomoku-bot-data.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --app-bg: var(--sessio-chat-background, #f6f6f4);
+      --app-fg: #1f232b;
+      --app-muted: #667085;
+      --app-surface: rgba(255, 255, 255, 0.88);
+      --app-surface-soft: rgba(255, 255, 255, 0.68);
+      --app-input: rgba(255, 255, 255, 0.94);
+      --app-border: rgba(31, 35, 43, 0.12);
+      --app-border-strong: rgba(31, 35, 43, 0.22);
+      --app-accent: #226c4a;
+      --app-accent-soft: rgba(34, 108, 74, 0.12);
+      --app-danger: #b42318;
+      --app-danger-soft: rgba(180, 35, 24, 0.1);
+      --app-shadow: 0 18px 44px rgba(61, 43, 24, 0.14);
+      --board-fill: #d8a44e;
+      --board-edge: #9b6b2d;
+      --board-line: rgba(74, 48, 19, 0.72);
+      --board-star: rgba(75, 47, 19, 0.76);
+      --board-texture: rgba(255, 255, 255, 0.14);
+      --stone-shadow: 0 5px 12px rgba(34, 25, 18, 0.24);
+      --status-bg: rgba(255, 255, 255, 0.72);
+      --score-bg: rgba(255, 255, 255, 0.62);
+      --moves-bg: rgba(255, 255, 255, 0.58);
+      --replay-bg: rgba(255, 255, 255, 0.54);
+    }
+
+    :root[data-sessio-theme="dark"] {
+      color-scheme: dark;
+      --app-bg: var(--sessio-chat-background, #232831);
+      --app-fg: #e6ebf5;
+      --app-muted: #9ea9ba;
+      --app-surface: rgba(21, 26, 35, 0.92);
+      --app-surface-soft: rgba(26, 32, 43, 0.82);
+      --app-input: rgba(26, 32, 43, 0.96);
+      --app-border: rgba(230, 235, 245, 0.12);
+      --app-border-strong: rgba(230, 235, 245, 0.22);
+      --app-accent: #6ec39a;
+      --app-accent-soft: rgba(110, 195, 154, 0.16);
+      --app-danger: #ff8f86;
+      --app-danger-soft: rgba(255, 143, 134, 0.14);
+      --app-shadow: 0 20px 40px rgba(0, 0, 0, 0.34);
+      --board-fill: #9c6a2d;
+      --board-edge: #684522;
+      --board-line: rgba(240, 227, 204, 0.72);
+      --board-star: rgba(240, 227, 204, 0.8);
+      --board-texture: rgba(255, 255, 255, 0.06);
+      --stone-shadow: 0 6px 14px rgba(0, 0, 0, 0.38);
+      --status-bg: rgba(21, 26, 35, 0.82);
+      --score-bg: rgba(21, 26, 35, 0.74);
+      --moves-bg: rgba(21, 26, 35, 0.66);
+      --replay-bg: rgba(21, 26, 35, 0.6);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-sessio-theme]) {
+        color-scheme: dark;
+        --app-bg: #232831;
+        --app-fg: #e6ebf5;
+        --app-muted: #9ea9ba;
+        --app-surface: rgba(21, 26, 35, 0.92);
+        --app-surface-soft: rgba(26, 32, 43, 0.82);
+        --app-input: rgba(26, 32, 43, 0.96);
+        --app-border: rgba(230, 235, 245, 0.12);
+        --app-border-strong: rgba(230, 235, 245, 0.22);
+        --app-accent: #6ec39a;
+        --app-accent-soft: rgba(110, 195, 154, 0.16);
+        --app-danger: #ff8f86;
+        --app-danger-soft: rgba(255, 143, 134, 0.14);
+        --app-shadow: 0 20px 40px rgba(0, 0, 0, 0.34);
+        --board-fill: #9c6a2d;
+        --board-edge: #684522;
+        --board-line: rgba(240, 227, 204, 0.72);
+        --board-star: rgba(240, 227, 204, 0.8);
+        --board-texture: rgba(255, 255, 255, 0.06);
+        --stone-shadow: 0 6px 14px rgba(0, 0, 0, 0.38);
+        --status-bg: rgba(21, 26, 35, 0.82);
+        --score-bg: rgba(21, 26, 35, 0.74);
+        --moves-bg: rgba(21, 26, 35, 0.66);
+        --replay-bg: rgba(21, 26, 35, 0.6);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--app-bg);
+      color: var(--app-fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    main {
+      width: min(1200px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: minmax(360px, 1fr) 320px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .game-area,
+    .side-panel {
+      border: 1px solid var(--app-border);
+      background: var(--app-surface);
+      box-shadow: var(--app-shadow);
+      border-radius: 8px;
+    }
+
+    .game-area {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .title-group {
+      min-width: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 5px 0 0;
+      color: var(--app-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .status {
+      min-width: 180px;
+      border: 1px solid var(--app-border);
+      border-radius: 8px;
+      background: var(--status-bg);
+      padding: 10px 12px;
+      text-align: right;
+    }
+
+    .status-main {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .status-sub {
+      margin-top: 3px;
+      color: var(--app-muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .board-wrap {
+      width: min(100%, 720px);
+      margin: 0 auto;
+      aspect-ratio: 1;
+      border: 10px solid var(--board-edge);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.14), transparent 32%, rgba(70, 46, 18, 0.08)),
+        repeating-linear-gradient(0deg, var(--board-texture) 0 2px, transparent 2px 22px),
+        var(--board-fill);
+      padding: 3.2%;
+      position: relative;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .board {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      --board-size: 15;
+      --intersection-offset: calc(50% / var(--board-size));
+    }
+
+    .grid-plane {
+      position: absolute;
+      inset: var(--intersection-offset);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .grid-lines {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .grid-lines line {
+      stroke: var(--board-line);
+      stroke-width: 0.028;
+      shape-rendering: crispEdges;
+    }
+
+    .cell {
+      appearance: none;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      position: absolute;
+      z-index: 2;
+      cursor: pointer;
+      min-width: 0;
+      min-height: 0;
+      width: calc(100% / var(--board-size));
+      height: calc(100% / var(--board-size));
+      transform: translate(-50%, -50%);
+    }
+
+    .cell:disabled {
+      cursor: default;
+    }
+
+    .cell:focus-visible {
+      outline: 3px solid rgba(34, 108, 74, 0.65);
+      outline-offset: -3px;
+    }
+
+    .stone {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 78%;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      transform: translate(-50%, -50%);
+      box-shadow: var(--stone-shadow);
+    }
+
+    .stone.black {
+      background:
+        radial-gradient(circle at 34% 28%, #545b63 0 6%, #24282d 28%, #0b0d10 70%);
+      border: 1px solid #050607;
+    }
+
+    .stone.white {
+      background:
+        radial-gradient(circle at 32% 26%, #ffffff 0 14%, #f4f1e7 42%, #d8d1c2 100%);
+      border: 1px solid #b7b0a3;
+    }
+
+    .cell.last .stone {
+      box-shadow: 0 0 0 3px rgba(34, 108, 74, 0.72), var(--stone-shadow);
+    }
+
+    .cell.win .stone {
+      box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.72), var(--stone-shadow);
+    }
+
+    .star {
+      position: absolute;
+      width: 2.2%;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: var(--board-star);
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .side-panel {
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .section {
+      display: grid;
+      gap: 10px;
+    }
+
+    .section[hidden] {
+      display: none;
+    }
+
+    .section-title {
+      margin: 0;
+      color: var(--app-muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--app-muted);
+      font-size: 13px;
+    }
+
+    select,
+    button.action,
+    input[type="range"] {
+      min-height: 40px;
+      border-radius: 8px;
+    }
+
+    select {
+      appearance: none;
+      width: 100%;
+      border: 1px solid var(--app-border-strong);
+      background: var(--app-input);
+      color: var(--app-fg);
+      padding: 9px 11px;
+    }
+
+    select:disabled {
+      opacity: 0.7;
+    }
+
+    .segmented {
+      display: grid;
+      gap: 8px;
+    }
+
+    .segmented button {
+      min-height: 42px;
+      border: 1px solid var(--app-border-strong);
+      border-radius: 8px;
+      background: var(--app-input);
+      color: var(--app-fg);
+      font: inherit;
+      text-align: left;
+      padding: 9px 10px;
+      cursor: pointer;
+    }
+
+    .segmented button[aria-pressed="true"] {
+      border-color: var(--app-accent);
+      background: var(--app-accent-soft);
+      color: var(--app-accent);
+      font-weight: 700;
+    }
+
+    .segmented button:disabled {
+      opacity: 0.7;
+      cursor: default;
+    }
+
+    .option-note {
+      display: block;
+      margin-top: 2px;
+      color: var(--app-muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button.action {
+      border: 1px solid var(--app-border-strong);
+      background: var(--app-input);
+      color: var(--app-fg);
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button.action.primary {
+      border-color: var(--app-accent);
+      background: var(--app-accent);
+      color: white;
+    }
+
+    button.action.secondary {
+      background: var(--app-input);
+      color: var(--app-accent);
+    }
+
+    button.action:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .status-line {
+      min-height: 18px;
+      color: var(--app-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .status-line.error {
+      color: var(--app-danger);
+    }
+
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .score {
+      border: 1px solid var(--app-border);
+      border-radius: 8px;
+      background: var(--score-bg);
+      padding: 10px;
+    }
+
+    .score-label {
+      color: var(--app-muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .score-value {
+      margin-top: 3px;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .moves {
+      max-height: 180px;
+      overflow: auto;
+      border: 1px solid var(--app-border);
+      border-radius: 8px;
+      background: var(--moves-bg);
+      padding: 8px 10px;
+      color: var(--app-muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .move-item {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .move-index {
+      min-width: 2.2em;
+      color: var(--app-fg);
+      font-weight: 700;
+    }
+
+    .move-item.current {
+      color: var(--app-accent);
+      font-weight: 700;
+    }
+
+    .empty-state {
+      border: 1px solid rgba(180, 35, 24, 0.28);
+      border-radius: 8px;
+      background: rgba(255, 245, 243, 0.92);
+      color: var(--app-danger);
+      padding: 14px;
+      line-height: 1.5;
+    }
+
+    .replay-panel {
+      border: 1px solid var(--app-border);
+      border-radius: 8px;
+      background: var(--replay-bg);
+      padding: 10px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .replay-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--app-muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .replay-meta strong {
+      color: var(--app-fg);
+    }
+
+    .replay-range {
+      width: 100%;
+      margin: 0;
+    }
+
+    .replay-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .replay-grid .action.primary {
+      grid-column: span 2;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+
+      .side-panel {
+        order: -1;
+      }
+
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .status {
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 560px) {
+      main {
+        padding: 10px;
+      }
+
+      .game-area,
+      .side-panel {
+        padding: 12px;
+      }
+
+      .board-wrap {
+        border-width: 7px;
+      }
+
+      h1 {
+        font-size: 19px;
+      }
+
+      .action-grid,
+      .scoreboard,
+      .replay-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .replay-grid .action.primary {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="app"></main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      const data = window.GOMOKU_BOT_DATA;
+      const app = document.getElementById("app");
+      const EMPTY = 0;
+      const HUMAN = 1;
+      const BOT = 2;
+      const REPLAY_INTERVAL_MS = 420;
+      const MAX_IMPORT_BYTES = 512 * 1024;
+      const MAX_BRIDGE_BYTES = 25 * 1024 * 1024;
+      const MIN_BOARD_SIZE = 5;
+      const MAX_BOARD_SIZE = 25;
+      const directions = [
+        [1, 0],
+        [0, 1],
+        [1, 1],
+        [1, -1]
+      ];
+
+      const state = {
+        mode: "live",
+        board: [],
+        boardSize: 15,
+        winLength: 5,
+        difficultyId: "",
+        starterId: "",
+        resolvedStarter: "player",
+        humanStone: "black",
+        botStone: "white",
+        current: HUMAN,
+        gameOver: false,
+        thinking: false,
+        winner: EMPTY,
+        winningCells: [],
+        lastMove: null,
+        moves: [],
+        score: { human: 0, bot: 0, draws: 0 },
+        botTimerId: null,
+        liveSnapshot: null,
+        replayGame: null,
+        replayStep: 0,
+        replayPlaying: false,
+        replayTimerId: null,
+        exporting: false
+      };
+
+      const els = {};
+
+      function isValidData(value) {
+        return Boolean(
+          value &&
+          value.schemaVersion === 1 &&
+          value.meta &&
+          typeof value.meta.title === "string" &&
+          typeof value.meta.subtitle === "string" &&
+          value.settings &&
+          Number.isInteger(value.settings.boardSize) &&
+          Number.isInteger(value.settings.winLength) &&
+          Number.isInteger(value.settings.maxMoveHistory) &&
+          typeof value.settings.defaultDifficultyId === "string" &&
+          typeof value.settings.defaultStarterId === "string" &&
+          Array.isArray(value.difficulties) &&
+          value.difficulties.length > 0 &&
+          Array.isArray(value.starterOptions) &&
+          value.starterOptions.length > 0 &&
+          value.players &&
+          value.players.human &&
+          value.players.bot &&
+          typeof value.players.human.label === "string" &&
+          typeof value.players.bot.label === "string"
+        );
+      }
+
+      function renderError(message) {
+        app.innerHTML = "";
+        const error = document.createElement("div");
+        error.className = "empty-state";
+        error.textContent = message || "缺少或无法识别 window.GOMOKU_BOT_DATA。请确认同目录的 gomoku-bot-data.js 已加载，并且 schemaVersion 为 1。";
+        app.append(error);
+      }
+
+      function createButton(text, className) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = className || "";
+        button.textContent = text;
+        return button;
+      }
+
+      function optionById(collection, id, fallbackId) {
+        return collection.find((item) => item.id === id) ||
+          collection.find((item) => item.id === fallbackId) ||
+          collection[0];
+      }
+
+      function cloneMove(move) {
+        return { row: move.row, col: move.col, player: move.player };
+      }
+
+      function cloneScore(score) {
+        return {
+          human: Number.isFinite(score && score.human) ? score.human : 0,
+          bot: Number.isFinite(score && score.bot) ? score.bot : 0,
+          draws: Number.isFinite(score && score.draws) ? score.draws : 0
+        };
+      }
+
+      function makeBoard(size) {
+        return Array.from({ length: size }, () => Array(size).fill(EMPTY));
+      }
+
+      function clearBotTimer() {
+        if (state.botTimerId !== null) {
+          window.clearTimeout(state.botTimerId);
+          state.botTimerId = null;
+        }
+        state.thinking = false;
+      }
+
+      function clearReplayTimer() {
+        if (state.replayTimerId !== null) {
+          window.clearInterval(state.replayTimerId);
+          state.replayTimerId = null;
+        }
+        state.replayPlaying = false;
+      }
+
+      function ensureBoardSize(size) {
+        if (state.boardSize !== size || !els.board || els.board.querySelectorAll(".cell").length !== size * size) {
+          state.boardSize = size;
+          drawBoard();
+          return;
+        }
+        state.boardSize = size;
+      }
+
+      function resolveStarter(starterId) {
+        if (starterId === "random") {
+          return Math.random() < 0.5 ? "player" : "bot";
+        }
+        return starterId === "bot" ? "bot" : "player";
+      }
+
+      function normalizeReplayGame(value) {
+        if (!value || typeof value !== "object") {
+          throw new Error("棋谱文件格式不正确。");
+        }
+        if (value.schemaVersion !== 1 || value.app !== "gomoku-bot" || !value.game) {
+          throw new Error("棋谱版本不受支持。");
+        }
+        const savedAtTime = typeof value.savedAt === "string" ? Date.parse(value.savedAt) : NaN;
+        if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value.savedAt || "") || Number.isNaN(savedAtTime) || new Date(savedAtTime).toISOString() !== value.savedAt) {
+          throw new Error("棋谱保存时间无效。");
+        }
+
+        const game = value.game;
+        if (!Number.isInteger(game.boardSize) || game.boardSize < MIN_BOARD_SIZE || game.boardSize > MAX_BOARD_SIZE) {
+          throw new Error(`棋盘尺寸必须是 ${MIN_BOARD_SIZE} 到 ${MAX_BOARD_SIZE} 之间的整数。`);
+        }
+        if (!Number.isInteger(game.winLength) || game.winLength < 3 || game.winLength > game.boardSize) {
+          throw new Error("连珠长度必须是 3 到棋盘尺寸之间的整数。");
+        }
+
+        if (!Array.isArray(game.moves)) {
+          throw new Error("棋谱缺少落子历史。");
+        }
+        const moves = game.moves;
+        const boardCapacity = game.boardSize * game.boardSize;
+        if (!Number.isInteger(game.maxMoveHistory) || game.maxMoveHistory <= 0 || game.maxMoveHistory > boardCapacity) {
+          throw new Error("棋谱最大步数无效。");
+        }
+        const maxMoves = game.maxMoveHistory;
+        if (moves.length > maxMoves) {
+          throw new Error("棋谱步数超出允许范围。");
+        }
+
+        if (!data.difficulties.some((item) => item.id === game.difficultyId)) {
+          throw new Error("棋谱 Bot 难度无效。");
+        }
+        if (!data.starterOptions.some((item) => item.id === game.starterId)) {
+          throw new Error("棋谱先手选项无效。");
+        }
+        if (game.resolvedStarter !== "bot" && game.resolvedStarter !== "player") {
+          throw new Error("棋谱实际先手方无效。");
+        }
+        const resolvedStarter = game.resolvedStarter;
+
+        const board = makeBoard(game.boardSize);
+        const normalizedMoves = [];
+        if (!game.score || typeof game.score !== "object") {
+          throw new Error("棋谱缺少比分。");
+        }
+        if (![game.score.human, game.score.bot, game.score.draws].every((value) => Number.isInteger(value) && value >= 0)) {
+          throw new Error("棋谱比分无效。");
+        }
+        const score = cloneScore(game.score);
+        let expectedPlayer = resolvedStarter === "bot" ? BOT : HUMAN;
+        let gameEnded = false;
+        for (const move of moves) {
+          if (gameEnded) {
+            throw new Error("棋谱在本局结束后仍包含落子。");
+          }
+          if (!move || !Number.isInteger(move.row) || !Number.isInteger(move.col) || !Number.isInteger(move.player)) {
+            throw new Error("棋谱中包含无效落子。");
+          }
+          if (move.player !== HUMAN && move.player !== BOT) {
+            throw new Error("棋谱中的落子方无效。");
+          }
+          if (move.player !== expectedPlayer) {
+            throw new Error("棋谱中的落子顺序无效。");
+          }
+          if (move.row < 0 || move.row >= game.boardSize || move.col < 0 || move.col >= game.boardSize) {
+            throw new Error("棋谱中包含越界坐标。");
+          }
+          if (board[move.row][move.col] !== EMPTY) {
+            throw new Error("棋谱中包含重复落子。");
+          }
+          board[move.row][move.col] = move.player;
+          normalizedMoves.push(cloneMove(move));
+          gameEnded = hasWinningLine(board, move.row, move.col, move.player, game.winLength) || normalizedMoves.length >= maxMoves;
+          expectedPlayer = expectedPlayer === HUMAN ? BOT : HUMAN;
+        }
+
+        return {
+          boardSize: game.boardSize,
+          winLength: game.winLength,
+          maxMoveHistory: maxMoves,
+          difficultyId: game.difficultyId,
+          starterId: game.starterId,
+          resolvedStarter,
+          score,
+          moves: normalizedMoves
+        };
+      }
+
+      function hasWinningLine(board, row, col, player, winLength) {
+        return directions.some(([dx, dy]) => {
+          let count = 1;
+          for (const sign of [-1, 1]) {
+            let r = row + dy * sign;
+            let c = col + dx * sign;
+            while (r >= 0 && r < board.length && c >= 0 && c < board.length && board[r][c] === player) {
+              count += 1;
+              r += dy * sign;
+              c += dx * sign;
+            }
+          }
+          return count >= winLength;
+        });
+      }
+
+      function buildExportPayload(savedAt) {
+        const source = state.mode === "replay" && state.replayGame ? state.replayGame : {
+          boardSize: state.boardSize,
+          winLength: state.winLength,
+          maxMoveHistory: data.settings.maxMoveHistory,
+          difficultyId: state.difficultyId,
+          starterId: state.starterId,
+          resolvedStarter: state.resolvedStarter,
+          score: cloneScore(state.score),
+          moves: state.moves.map(cloneMove)
+        };
+
+        return {
+          schemaVersion: 1,
+          app: "gomoku-bot",
+          savedAt: savedAt || new Date().toISOString(),
+          game: {
+            boardSize: source.boardSize,
+            winLength: source.winLength,
+            maxMoveHistory: source.maxMoveHistory,
+            difficultyId: source.difficultyId,
+            starterId: source.starterId,
+            resolvedStarter: source.resolvedStarter,
+            score: cloneScore(source.score),
+            moves: source.moves.map(cloneMove)
+          }
+        };
+      }
+
+      function createFileName(savedAt) {
+        return `gomoku-bot-${savedAt.replace(/[-:.]/g, "")}.json`;
+      }
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KiB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
+      }
+
+      function downloadBlob(blob, fileName) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.style.display = "none";
+        document.body.append(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function writeExportToSessio(json, fileName) {
+        if (window.parent === window) {
+          return Promise.resolve({ ok: false, unavailable: true });
+        }
+        if (new Blob([json]).size > MAX_BRIDGE_BYTES) {
+          return Promise.resolve({ ok: false, error: "文件超过 Sessio 25 MiB 写入限制。" });
+        }
+
+        const requestId = `gomoku-export-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        return new Promise((resolve) => {
+          let settled = false;
+          const finish = (result) => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(timeoutId);
+            window.removeEventListener("message", handleMessage);
+            resolve(result);
+          };
+          const handleMessage = (event) => {
+            if (event.source !== window.parent) return;
+            const message = event.data;
+            if (!message || message.source !== "sessio" || message.type !== "sessio-app-write-file-result" || message.requestId !== requestId) return;
+            finish(message);
+          };
+          const timeoutId = window.setTimeout(() => {
+            finish({ ok: false, error: "Sessio 文件写入响应超时。" });
+          }, 15000);
+          window.addEventListener("message", handleMessage);
+          window.parent.postMessage({
+            source: "sessio-app",
+            type: "sessio-app-write-file",
+            requestId,
+            path: `exports/${fileName}`,
+            data: json,
+            encoding: "utf8",
+            overwrite: false
+          }, "*");
+        });
+      }
+
+      function setIoStatus(message, isError) {
+        els.ioStatus.textContent = message || "";
+        els.ioStatus.classList.toggle("error", isError === true);
+      }
+
+      function createScore(label) {
+        const box = document.createElement("div");
+        box.className = "score";
+        const labelEl = document.createElement("div");
+        labelEl.className = "score-label";
+        labelEl.textContent = label;
+        const valueEl = document.createElement("div");
+        valueEl.className = "score-value";
+        valueEl.textContent = "0";
+        box.append(labelEl, valueEl);
+        return { box, value: valueEl };
+      }
+
+      function renderShell() {
+        state.boardSize = data.settings.boardSize;
+        state.winLength = data.settings.winLength;
+        state.difficultyId = data.settings.defaultDifficultyId;
+        state.starterId = data.settings.defaultStarterId;
+
+        const gameArea = document.createElement("section");
+        gameArea.className = "game-area";
+
+        const topbar = document.createElement("div");
+        topbar.className = "topbar";
+
+        const titleGroup = document.createElement("div");
+        titleGroup.className = "title-group";
+        const title = document.createElement("h1");
+        title.textContent = data.meta.title;
+        const subtitle = document.createElement("p");
+        subtitle.className = "subtitle";
+        subtitle.textContent = data.meta.subtitle;
+        titleGroup.append(title, subtitle);
+
+        const status = document.createElement("div");
+        status.className = "status";
+        status.setAttribute("aria-live", "polite");
+        els.statusMain = document.createElement("div");
+        els.statusMain.className = "status-main";
+        els.statusSub = document.createElement("div");
+        els.statusSub.className = "status-sub";
+        status.append(els.statusMain, els.statusSub);
+        topbar.append(titleGroup, status);
+
+        const boardWrap = document.createElement("div");
+        boardWrap.className = "board-wrap";
+        els.board = document.createElement("div");
+        els.board.className = "board";
+        els.board.setAttribute("role", "grid");
+        els.board.setAttribute("aria-label", "五子棋棋盘");
+        boardWrap.append(els.board);
+        gameArea.append(topbar, boardWrap);
+
+        const sidePanel = document.createElement("aside");
+        sidePanel.className = "side-panel";
+
+        const settingsSection = document.createElement("section");
+        settingsSection.className = "section";
+        const settingsTitle = document.createElement("p");
+        settingsTitle.className = "section-title";
+        settingsTitle.textContent = "对局设置";
+
+        const difficultyLabel = document.createElement("label");
+        difficultyLabel.textContent = "Bot 难度";
+        els.difficultySelect = document.createElement("select");
+        for (const difficulty of data.difficulties) {
+          const option = document.createElement("option");
+          option.value = difficulty.id;
+          option.textContent = difficulty.label;
+          if (difficulty.id === state.difficultyId) option.selected = true;
+          els.difficultySelect.append(option);
+        }
+        els.difficultyDescription = document.createElement("span");
+        els.difficultyDescription.className = "option-note";
+        difficultyLabel.append(els.difficultySelect, els.difficultyDescription);
+
+        els.starterGroup = document.createElement("div");
+        els.starterGroup.className = "segmented";
+        for (const option of data.starterOptions) {
+          const button = createButton(option.label, "");
+          button.dataset.starter = option.id;
+          button.setAttribute("aria-pressed", String(option.id === state.starterId));
+          const note = document.createElement("span");
+          note.className = "option-note";
+          note.textContent = option.description;
+          button.append(note);
+          els.starterGroup.append(button);
+        }
+
+        settingsSection.append(settingsTitle, difficultyLabel, els.starterGroup);
+
+        const actionSection = document.createElement("section");
+        actionSection.className = "section";
+        const actionTitle = document.createElement("p");
+        actionTitle.className = "section-title";
+        actionTitle.textContent = "操作";
+        const actionGrid = document.createElement("div");
+        actionGrid.className = "action-grid";
+        els.newGameButton = createButton("新开一局", "action primary");
+        els.undoButton = createButton("悔一步", "action secondary");
+        els.saveButton = createButton("导出棋局", "action secondary");
+        els.importButton = createButton("导入棋局", "action secondary");
+        actionGrid.append(els.newGameButton, els.undoButton, els.saveButton, els.importButton);
+        els.ioStatus = document.createElement("div");
+        els.ioStatus.className = "status-line";
+        els.ioStatus.setAttribute("role", "status");
+        els.ioStatus.setAttribute("aria-live", "polite");
+        actionSection.append(actionTitle, actionGrid, els.ioStatus);
+
+        const scoreSection = document.createElement("section");
+        scoreSection.className = "section";
+        const scoreTitle = document.createElement("p");
+        scoreTitle.className = "section-title";
+        scoreTitle.textContent = "比分";
+        const scoreboard = document.createElement("div");
+        scoreboard.className = "scoreboard";
+        els.humanScore = createScore("你");
+        els.botScore = createScore("Bot");
+        els.drawScore = createScore("和棋");
+        scoreboard.append(els.humanScore.box, els.botScore.box);
+        scoreSection.append(scoreTitle, scoreboard, els.drawScore.box);
+
+        const replaySection = document.createElement("section");
+        replaySection.className = "section";
+        replaySection.hidden = true;
+        els.replaySection = replaySection;
+        const replayTitle = document.createElement("p");
+        replayTitle.className = "section-title";
+        replayTitle.textContent = "复盘";
+        const replayPanel = document.createElement("div");
+        replayPanel.className = "replay-panel";
+        els.replayMeta = document.createElement("div");
+        els.replayMeta.className = "replay-meta";
+        els.replayMetaLeft = document.createElement("span");
+        els.replayMetaRight = document.createElement("span");
+        els.replayMeta.append(els.replayMetaLeft, els.replayMetaRight);
+        els.replayRange = document.createElement("input");
+        els.replayRange.type = "range";
+        els.replayRange.min = "0";
+        els.replayRange.max = "0";
+        els.replayRange.value = "0";
+        els.replayRange.className = "replay-range";
+        els.replayRange.setAttribute("aria-label", "复盘进度");
+        const replayGrid = document.createElement("div");
+        replayGrid.className = "replay-grid";
+        els.replayPrevButton = createButton("上一手", "action secondary");
+        els.replayPlayButton = createButton("播放", "action primary");
+        els.replayNextButton = createButton("下一手", "action secondary");
+        els.replayExitButton = createButton("返回对局", "action secondary");
+        replayGrid.append(els.replayPrevButton, els.replayPlayButton, els.replayNextButton, els.replayExitButton);
+        replayPanel.append(els.replayMeta, els.replayRange, replayGrid);
+        replaySection.append(replayTitle, replayPanel);
+
+        const historySection = document.createElement("section");
+        historySection.className = "section";
+        const historyTitle = document.createElement("p");
+        historyTitle.className = "section-title";
+        historyTitle.textContent = "最近落子";
+        els.moves = document.createElement("div");
+        els.moves.className = "moves";
+        historySection.append(historyTitle, els.moves);
+
+        sidePanel.append(settingsSection, actionSection, scoreSection, replaySection, historySection);
+        app.append(gameArea, sidePanel);
+
+        els.difficultySelect.addEventListener("change", () => {
+          state.difficultyId = els.difficultySelect.value;
+          updateDifficultyDescription();
+          updateStatus();
+        });
+
+        els.starterGroup.addEventListener("click", (event) => {
+          const button = event.target.closest("button[data-starter]");
+          if (!button || state.mode !== "live") return;
+          state.starterId = button.dataset.starter;
+          beginNewGame();
+        });
+
+        els.newGameButton.addEventListener("click", beginNewGame);
+        els.undoButton.addEventListener("click", undoPair);
+        els.saveButton.addEventListener("click", saveCurrentGame);
+        els.importButton.addEventListener("click", () => els.importInput.click());
+        els.replayPrevButton.addEventListener("click", () => goToReplayStep(state.replayStep - 1, false));
+        els.replayPlayButton.addEventListener("click", toggleReplayPlayback);
+        els.replayNextButton.addEventListener("click", () => goToReplayStep(state.replayStep + 1, false));
+        els.replayExitButton.addEventListener("click", exitReplay);
+        els.replayRange.addEventListener("input", () => goToReplayStep(Number(els.replayRange.value), false));
+
+        els.importInput = document.createElement("input");
+        els.importInput.type = "file";
+        els.importInput.accept = ".json,application/json";
+        els.importInput.className = "visually-hidden";
+        els.importInput.setAttribute("aria-hidden", "true");
+        els.importInput.addEventListener("change", handleImportSelection);
+        sidePanel.append(els.importInput);
+
+        drawBoard();
+        updateDifficultyDescription();
+        beginNewGame();
+      }
+
+      function updateDifficultyDescription() {
+        const difficulty = optionById(data.difficulties, state.difficultyId, data.settings.defaultDifficultyId);
+        els.difficultyDescription.textContent = difficulty.description;
+      }
+
+      function updateStarterButtons() {
+        for (const button of els.starterGroup.querySelectorAll("button[data-starter]")) {
+          button.setAttribute("aria-pressed", String(button.dataset.starter === state.starterId));
+          button.disabled = state.mode !== "live";
+        }
+      }
+
+      function drawBoard() {
+        els.board.innerHTML = "";
+        els.board.style.setProperty("--board-size", String(state.boardSize));
+        els.board.setAttribute("aria-rowcount", String(state.boardSize));
+        els.board.setAttribute("aria-colcount", String(state.boardSize));
+
+        const gridPlane = document.createElement("div");
+        gridPlane.className = "grid-plane";
+
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.classList.add("grid-lines");
+        svg.setAttribute("viewBox", `0 0 ${state.boardSize - 1} ${state.boardSize - 1}`);
+        svg.setAttribute("preserveAspectRatio", "none");
+
+        for (let i = 0; i < state.boardSize; i += 1) {
+          const offset = String(i);
+          const horizontal = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          horizontal.setAttribute("x1", "0");
+          horizontal.setAttribute("y1", offset);
+          horizontal.setAttribute("x2", String(state.boardSize - 1));
+          horizontal.setAttribute("y2", offset);
+          svg.append(horizontal);
+
+          const vertical = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          vertical.setAttribute("x1", offset);
+          vertical.setAttribute("y1", "0");
+          vertical.setAttribute("x2", offset);
+          vertical.setAttribute("y2", String(state.boardSize - 1));
+          svg.append(vertical);
+        }
+        gridPlane.append(svg);
+
+        for (const point of starPoints(state.boardSize)) {
+          const star = document.createElement("span");
+          star.className = "star";
+          star.style.left = `${point.x * 100 / (state.boardSize - 1)}%`;
+          star.style.top = `${point.y * 100 / (state.boardSize - 1)}%`;
+          gridPlane.append(star);
+        }
+        els.board.append(gridPlane);
+
+        for (let row = 0; row < state.boardSize; row += 1) {
+          for (let col = 0; col < state.boardSize; col += 1) {
+            const cell = document.createElement("button");
+            cell.type = "button";
+            cell.className = "cell";
+            cell.dataset.row = String(row);
+            cell.dataset.col = String(col);
+            cell.style.left = `${(col + 0.5) * 100 / state.boardSize}%`;
+            cell.style.top = `${(row + 0.5) * 100 / state.boardSize}%`;
+            cell.setAttribute("role", "gridcell");
+            cell.setAttribute("aria-label", `${row + 1} 行 ${col + 1} 列，空位`);
+            cell.addEventListener("click", () => handleHumanMove(row, col));
+            els.board.append(cell);
+          }
+        }
+      }
+
+      function starPoints(size) {
+        if (size < 13) return [{ x: Math.floor(size / 2), y: Math.floor(size / 2) }];
+        const low = 3;
+        const mid = Math.floor(size / 2);
+        const high = size - 4;
+        return [
+          { x: low, y: low },
+          { x: mid, y: low },
+          { x: high, y: low },
+          { x: low, y: mid },
+          { x: mid, y: mid },
+          { x: high, y: mid },
+          { x: low, y: high },
+          { x: mid, y: high },
+          { x: high, y: high }
+        ];
+      }
+
+      function beginNewGame() {
+        clearReplayTimer();
+        clearBotTimer();
+        state.mode = "live";
+        state.replayGame = null;
+        state.liveSnapshot = null;
+        state.boardSize = data.settings.boardSize;
+        state.winLength = data.settings.winLength;
+        state.board = makeBoard(state.boardSize);
+        state.gameOver = false;
+        state.winner = EMPTY;
+        state.winningCells = [];
+        state.lastMove = null;
+        state.moves = [];
+
+        state.resolvedStarter = resolveStarter(state.starterId);
+        state.current = state.resolvedStarter === "bot" ? BOT : HUMAN;
+        state.humanStone = state.resolvedStarter === "bot" ? "white" : "black";
+        state.botStone = state.resolvedStarter === "bot" ? "black" : "white";
+
+        updateDifficultyDescription();
+        updateStarterButtons();
+        renderBoardState();
+        updateStatus(state.resolvedStarter);
+        if (state.current === BOT) scheduleBotMove();
+      }
+
+      function captureLiveSnapshot() {
+        state.liveSnapshot = {
+          boardSize: state.boardSize,
+          winLength: state.winLength,
+          difficultyId: state.difficultyId,
+          starterId: state.starterId,
+          resolvedStarter: state.resolvedStarter,
+          humanStone: state.humanStone,
+          botStone: state.botStone,
+          current: state.current,
+          gameOver: state.gameOver,
+          thinking: state.thinking,
+          winner: state.winner,
+          winningCells: state.winningCells.map((cell) => ({ row: cell.row, col: cell.col })),
+          lastMove: state.lastMove ? cloneMove(state.lastMove) : null,
+          moves: state.moves.map(cloneMove),
+          board: state.board.map((row) => row.slice()),
+          score: cloneScore(state.score)
+        };
+      }
+
+      function restoreLiveSnapshot() {
+        if (!state.liveSnapshot) {
+          beginNewGame();
+          return;
+        }
+        clearReplayTimer();
+        clearBotTimer();
+        const snapshot = state.liveSnapshot;
+        ensureBoardSize(snapshot.boardSize);
+        state.mode = "live";
+        state.winLength = snapshot.winLength;
+        state.difficultyId = snapshot.difficultyId;
+        state.starterId = snapshot.starterId;
+        state.resolvedStarter = snapshot.resolvedStarter;
+        state.humanStone = snapshot.humanStone;
+        state.botStone = snapshot.botStone;
+        state.current = snapshot.current;
+        state.gameOver = snapshot.gameOver;
+        state.thinking = snapshot.thinking;
+        state.winner = snapshot.winner;
+        state.winningCells = snapshot.winningCells.map((cell) => ({ row: cell.row, col: cell.col }));
+        state.lastMove = snapshot.lastMove ? cloneMove(snapshot.lastMove) : null;
+        state.moves = snapshot.moves.map(cloneMove);
+        state.board = snapshot.board.map((row) => row.slice());
+        state.score = cloneScore(snapshot.score);
+        state.replayGame = null;
+        state.replayStep = 0;
+        renderBoardState();
+        updateDifficultyDescription();
+        updateStatus();
+        if (snapshot.thinking && snapshot.current === BOT && !snapshot.gameOver) {
+          scheduleBotMove();
+        }
+      }
+
+      function enterReplay(game) {
+        if (state.mode !== "replay") {
+          captureLiveSnapshot();
+        }
+        clearBotTimer();
+        clearReplayTimer();
+        state.mode = "replay";
+        state.replayGame = game;
+        state.replayStep = 0;
+        applyReplayStep(0);
+        setIoStatus(`已导入 ${game.moves.length} 手棋谱，可以用复盘控件逐步查看。`, false);
+      }
+
+      function exitReplay() {
+        if (state.mode !== "replay") return;
+        clearReplayTimer();
+        clearBotTimer();
+        restoreLiveSnapshot();
+        state.liveSnapshot = cloneLiveState();
+        setIoStatus("已返回当前对局。", false);
+      }
+
+      function cloneLiveState() {
+        return {
+          boardSize: state.boardSize,
+          winLength: state.winLength,
+          difficultyId: state.difficultyId,
+          starterId: state.starterId,
+          resolvedStarter: state.resolvedStarter,
+          humanStone: state.humanStone,
+          botStone: state.botStone,
+          current: state.current,
+          gameOver: state.gameOver,
+          thinking: state.thinking,
+          winner: state.winner,
+          winningCells: state.winningCells.map((cell) => ({ row: cell.row, col: cell.col })),
+          lastMove: state.lastMove ? cloneMove(state.lastMove) : null,
+          moves: state.moves.map(cloneMove),
+          board: state.board.map((row) => row.slice()),
+          score: cloneScore(state.score)
+        };
+      }
+
+      function applyReplayStep(step) {
+        const game = state.replayGame;
+        if (!game) return;
+        ensureBoardSize(game.boardSize);
+        state.winLength = game.winLength;
+        state.difficultyId = game.difficultyId;
+        state.starterId = game.starterId;
+        state.resolvedStarter = game.resolvedStarter;
+        state.humanStone = game.resolvedStarter === "bot" ? "white" : "black";
+        state.botStone = game.resolvedStarter === "bot" ? "black" : "white";
+        state.score = cloneScore(game.score);
+        state.board = makeBoard(state.boardSize);
+        state.moves = [];
+        state.gameOver = false;
+        state.thinking = false;
+        state.winner = EMPTY;
+        state.winningCells = [];
+        state.lastMove = null;
+        state.current = game.resolvedStarter === "bot" ? BOT : HUMAN;
+
+        const limit = Math.max(0, Math.min(step, game.moves.length));
+        const drawLimit = Number.isInteger(game.maxMoveHistory) && game.maxMoveHistory > 0
+          ? game.maxMoveHistory
+          : state.boardSize * state.boardSize;
+
+        for (let i = 0; i < limit; i += 1) {
+          const move = game.moves[i];
+          if (!isInside(move.row, move.col) || state.board[move.row][move.col] !== EMPTY) {
+            break;
+          }
+          state.board[move.row][move.col] = move.player;
+          state.moves.push(cloneMove(move));
+          state.lastMove = cloneMove(move);
+          const winningCells = getWinningCells(move.row, move.col, move.player);
+          if (winningCells.length >= state.winLength) {
+            state.gameOver = true;
+            state.winner = move.player;
+            state.winningCells = winningCells;
+            break;
+          }
+          if (state.moves.length >= drawLimit) {
+            state.gameOver = true;
+            state.winner = EMPTY;
+            break;
+          }
+          state.current = move.player === HUMAN ? BOT : HUMAN;
+        }
+
+        if (state.moves.length === 0) {
+          state.current = game.resolvedStarter === "bot" ? BOT : HUMAN;
+        } else if (!state.gameOver) {
+          const lastMove = state.moves[state.moves.length - 1];
+          state.current = lastMove.player === HUMAN ? BOT : HUMAN;
+        }
+        if (!state.gameOver && state.moves.length >= drawLimit) {
+          state.gameOver = true;
+          state.winner = EMPTY;
+        }
+
+        state.replayStep = state.moves.length;
+        renderBoardState();
+        updateDifficultyDescription();
+        updateStatus();
+        updateReplayControls();
+      }
+
+      function goToReplayStep(step, keepPlayback) {
+        if (state.mode !== "replay" || !state.replayGame) return;
+        if (!keepPlayback) {
+          clearReplayTimer();
+        }
+        const clamped = Math.max(0, Math.min(step, state.replayGame.moves.length));
+        state.replayStep = clamped;
+        applyReplayStep(clamped);
+      }
+
+      function toggleReplayPlayback() {
+        if (state.mode !== "replay" || !state.replayGame || state.replayGame.moves.length === 0) return;
+        if (state.replayPlaying) {
+          clearReplayTimer();
+          updateStatus();
+          updateReplayControls();
+          return;
+        }
+        if (state.replayStep >= state.replayGame.moves.length) {
+          goToReplayStep(0, false);
+        }
+        state.replayPlaying = true;
+        updateStatus();
+        updateReplayControls();
+        state.replayTimerId = window.setInterval(() => {
+          if (state.mode !== "replay" || !state.replayGame) {
+            clearReplayTimer();
+            updateStatus();
+            updateReplayControls();
+            return;
+          }
+          if (state.replayStep >= state.replayGame.moves.length) {
+            clearReplayTimer();
+            updateStatus();
+            updateReplayControls();
+            return;
+          }
+          goToReplayStep(state.replayStep + 1, true);
+          if (state.replayStep >= state.replayGame.moves.length) {
+            clearReplayTimer();
+            updateStatus();
+            updateReplayControls();
+          }
+        }, REPLAY_INTERVAL_MS);
+      }
+
+      function updateReplayControls() {
+        const replaying = state.mode === "replay" && Boolean(state.replayGame);
+        els.replaySection.hidden = !replaying;
+        if (!replaying) {
+          els.replayRange.value = "0";
+          els.replayMetaLeft.textContent = "";
+          els.replayMetaRight.textContent = "";
+          els.replayPrevButton.disabled = true;
+          els.replayPlayButton.disabled = true;
+          els.replayNextButton.disabled = true;
+          els.replayExitButton.disabled = true;
+          return;
+        }
+
+        const total = state.replayGame.moves.length;
+        const progress = `${state.replayStep} / ${total} 手`;
+        els.replayMetaLeft.textContent = `棋盘 ${state.replayGame.boardSize}×${state.replayGame.boardSize}`;
+        els.replayMetaRight.textContent = total === 0 ? "空棋谱" : progress;
+        els.replayRange.max = String(total);
+        els.replayRange.value = String(state.replayStep);
+        els.replayRange.disabled = total === 0;
+        els.replayPrevButton.disabled = state.replayPlaying || state.replayStep <= 0 || total === 0;
+        els.replayPlayButton.disabled = total === 0;
+        els.replayPlayButton.textContent = state.replayPlaying ? "暂停" : "播放";
+        els.replayNextButton.disabled = state.replayPlaying || state.replayStep >= total || total === 0;
+        els.replayExitButton.disabled = false;
+      }
+
+      function startLiveGame() {
+        clearReplayTimer();
+        clearBotTimer();
+        state.mode = "live";
+        state.replayGame = null;
+        state.replayStep = 0;
+        state.replayPlaying = false;
+        state.boardSize = data.settings.boardSize;
+        state.winLength = data.settings.winLength;
+        state.board = makeBoard(state.boardSize);
+        state.gameOver = false;
+        state.winner = EMPTY;
+        state.winningCells = [];
+        state.lastMove = null;
+        state.moves = [];
+        state.resolvedStarter = resolveStarter(state.starterId);
+        state.current = state.resolvedStarter === "bot" ? BOT : HUMAN;
+        state.humanStone = state.resolvedStarter === "bot" ? "white" : "black";
+        state.botStone = state.resolvedStarter === "bot" ? "black" : "white";
+        state.liveSnapshot = cloneLiveState();
+        updateDifficultyDescription();
+        updateStarterButtons();
+        renderBoardState();
+        updateStatus(state.resolvedStarter);
+        setIoStatus("");
+        if (state.current === BOT) {
+          scheduleBotMove();
+        }
+      }
+
+      function beginNewGame() {
+        state.mode = "live";
+        state.replayGame = null;
+        state.liveSnapshot = null;
+        startLiveGame();
+      }
+
+      function handleHumanMove(row, col) {
+        if (state.mode !== "live" || state.gameOver || state.thinking || state.current !== HUMAN || state.board[row][col] !== EMPTY) return;
+        placeMove(row, col, HUMAN);
+        if (finishIfNeeded(row, col, HUMAN)) return;
+        state.current = BOT;
+        updateStatus();
+        scheduleBotMove();
+      }
+
+      function scheduleBotMove() {
+        clearBotTimer();
+        state.thinking = true;
+        renderBoardState();
+        updateStatus();
+        state.botTimerId = window.setTimeout(() => {
+          state.botTimerId = null;
+          if (state.mode !== "live" || state.gameOver) return;
+          const move = chooseBotMove();
+          if (move) {
+            placeMove(move.row, move.col, BOT);
+            if (finishIfNeeded(move.row, move.col, BOT)) return;
+          }
+          state.current = HUMAN;
+          state.thinking = false;
+          renderBoardState();
+          updateStatus();
+          state.liveSnapshot = cloneLiveState();
+        }, data.settings.botThinkDelayMs);
+      }
+
+      function undoPair() {
+        if (state.mode !== "live" || state.thinking || state.moves.length === 0) return;
+        clearBotTimer();
+        const removeCount = state.gameOver ? 1 : Math.min(2, state.moves.length);
+        for (let i = 0; i < removeCount; i += 1) {
+          const move = state.moves.pop();
+          state.board[move.row][move.col] = EMPTY;
+        }
+        state.gameOver = false;
+        state.winner = EMPTY;
+        state.winningCells = [];
+        state.lastMove = state.moves[state.moves.length - 1] || null;
+        state.current = HUMAN;
+        state.liveSnapshot = cloneLiveState();
+        renderBoardState();
+        updateStatus();
+      }
+
+      function placeMove(row, col, player) {
+        state.board[row][col] = player;
+        state.lastMove = { row, col, player };
+        state.moves.push({ row, col, player });
+        renderBoardState();
+      }
+
+      function finishIfNeeded(row, col, player) {
+        const winningCells = getWinningCells(row, col, player);
+        if (winningCells.length >= state.winLength) {
+          state.gameOver = true;
+          state.thinking = false;
+          state.winner = player;
+          state.winningCells = winningCells;
+          if (player === HUMAN) state.score.human += 1;
+          if (player === BOT) state.score.bot += 1;
+          state.liveSnapshot = cloneLiveState();
+          renderBoardState();
+          updateStatus();
+          return true;
+        }
+        if (state.moves.length >= data.settings.maxMoveHistory) {
+          state.gameOver = true;
+          state.thinking = false;
+          state.winner = EMPTY;
+          state.score.draws += 1;
+          state.liveSnapshot = cloneLiveState();
+          renderBoardState();
+          updateStatus();
+          return true;
+        }
+        return false;
+      }
+
+      function getWinningCells(row, col, player) {
+        for (const [dx, dy] of directions) {
+          const line = [{ row, col }];
+          line.push(...collectDirection(row, col, dx, dy, player));
+          line.unshift(...collectDirection(row, col, -dx, -dy, player).reverse());
+          if (line.length >= state.winLength) return line;
+        }
+        return [];
+      }
+
+      function collectDirection(row, col, dx, dy, player) {
+        const cells = [];
+        let r = row + dy;
+        let c = col + dx;
+        while (isInside(r, c) && state.board[r][c] === player) {
+          cells.push({ row: r, col: c });
+          r += dy;
+          c += dx;
+        }
+        return cells;
+      }
+
+      function renderBoardState() {
+        const winningKeys = new Set(state.winningCells.map((cell) => key(cell.row, cell.col)));
+        for (const cell of els.board.querySelectorAll(".cell")) {
+          const row = Number(cell.dataset.row);
+          const col = Number(cell.dataset.col);
+          const value = state.board[row][col];
+          cell.innerHTML = "";
+          cell.disabled = state.mode !== "live" || state.gameOver || state.thinking || state.current !== HUMAN || value !== EMPTY;
+          cell.classList.toggle("last", Boolean(state.lastMove && state.lastMove.row === row && state.lastMove.col === col));
+          cell.classList.toggle("win", winningKeys.has(key(row, col)));
+          if (value !== EMPTY) {
+            const stone = document.createElement("span");
+            stone.className = `stone ${value === HUMAN ? state.humanStone : state.botStone}`;
+            cell.append(stone);
+            cell.setAttribute("aria-label", `${row + 1} 行 ${col + 1} 列，${value === HUMAN ? data.players.human.label : data.players.bot.label}`);
+          } else {
+            cell.setAttribute("aria-label", `${row + 1} 行 ${col + 1} 列，空位`);
+          }
+        }
+        updateScores();
+        updateMoves();
+        updateControlStates();
+      }
+
+      function updateScores() {
+        els.humanScore.value.textContent = String(state.score.human);
+        els.botScore.value.textContent = String(state.score.bot);
+        els.drawScore.value.textContent = String(state.score.draws);
+      }
+
+      function updateMoves() {
+        const movesToShow = state.mode === "replay" ? state.moves : state.moves.slice(-14);
+        if (movesToShow.length === 0) {
+          els.moves.textContent = state.mode === "replay" ? "当前没有可回放的落子" : "暂无落子";
+          return;
+        }
+        els.moves.innerHTML = "";
+        const startIndex = state.mode === "replay" ? 0 : state.moves.length - movesToShow.length;
+        movesToShow.forEach((move, index) => {
+          const item = document.createElement("div");
+          item.className = "move-item";
+          const step = startIndex + index + 1;
+          if (state.mode === "replay" && step === state.moves.length) {
+            item.classList.add("current");
+          } else if (state.mode === "live" && index === movesToShow.length - 1) {
+            item.classList.add("current");
+          }
+          const moveIndex = document.createElement("span");
+          moveIndex.className = "move-index";
+          moveIndex.textContent = `${step}.`;
+          const moveText = document.createElement("span");
+          const playerLabel = move.player === HUMAN ? data.players.human.label : data.players.bot.label;
+          const stone = move.player === HUMAN ? state.humanStone : state.botStone;
+          moveText.textContent = `${playerLabel} ${stone === "black" ? "黑" : "白"}：${move.row + 1}, ${move.col + 1}`;
+          item.append(moveIndex, moveText);
+          els.moves.append(item);
+        });
+      }
+
+      function updateStatus(resolvedStarter) {
+        if (state.mode === "replay" && state.replayGame) {
+          const total = state.replayGame.moves.length;
+          if (state.gameOver) {
+            if (state.winner === HUMAN) {
+              els.statusMain.textContent = "你赢了";
+              els.statusSub.textContent = `复盘 ${state.moves.length} / ${total} 手`;
+            } else if (state.winner === BOT) {
+              els.statusMain.textContent = "Bot 赢了";
+              els.statusSub.textContent = `复盘 ${state.moves.length} / ${total} 手`;
+            } else {
+              els.statusMain.textContent = "和棋";
+              els.statusSub.textContent = `复盘 ${state.moves.length} / ${total} 手`;
+            }
+          } else if (state.replayPlaying) {
+            els.statusMain.textContent = "复盘播放中";
+            els.statusSub.textContent = total === 0 ? "空棋谱" : `第 ${state.moves.length} / ${total} 手`;
+          } else if (state.moves.length >= total) {
+            els.statusMain.textContent = "复盘已到末手";
+            els.statusSub.textContent = total === 0 ? "空棋谱" : `第 ${state.moves.length} / ${total} 手`;
+          } else {
+            els.statusMain.textContent = "复盘中";
+            els.statusSub.textContent = total === 0 ? "空棋谱" : `第 ${state.moves.length} / ${total} 手`;
+          }
+          els.undoButton.disabled = true;
+          updateReplayControls();
+          return;
+        }
+
+        const difficulty = optionById(data.difficulties, state.difficultyId, data.settings.defaultDifficultyId);
+        if (state.gameOver) {
+          if (state.winner === HUMAN) {
+            els.statusMain.textContent = "你赢了";
+            els.statusSub.textContent = "五子连珠，本局结束";
+          } else if (state.winner === BOT) {
+            els.statusMain.textContent = "Bot 赢了";
+            els.statusSub.textContent = "调整难度或重新开局";
+          } else {
+            els.statusMain.textContent = "和棋";
+            els.statusSub.textContent = "棋盘已满";
+          }
+        } else if (state.thinking) {
+          els.statusMain.textContent = "Bot 思考中";
+          els.statusSub.textContent = `${difficulty.label}难度`;
+        } else if (state.current === HUMAN) {
+          els.statusMain.textContent = "轮到你";
+          els.statusSub.textContent = `你执${state.humanStone === "black" ? "黑" : "白"}`;
+        } else {
+          els.statusMain.textContent = "轮到 Bot";
+          els.statusSub.textContent = `Bot 执${state.botStone === "black" ? "黑" : "白"}`;
+        }
+        if (resolvedStarter) {
+          const starter = resolvedStarter === "bot" ? "Bot" : "你";
+          els.statusSub.textContent = `${starter}执黑先手`;
+        }
+        els.undoButton.disabled = state.thinking || state.moves.length === 0;
+      }
+
+      function updateControlStates() {
+        const replaying = state.mode === "replay";
+        els.difficultySelect.disabled = replaying;
+        for (const button of els.starterGroup.querySelectorAll("button[data-starter]")) {
+          button.disabled = replaying;
+          button.setAttribute("aria-pressed", String(button.dataset.starter === state.starterId));
+        }
+        els.newGameButton.disabled = false;
+        els.saveButton.disabled = state.exporting;
+        els.importButton.disabled = false;
+        els.undoButton.disabled = replaying || state.thinking || state.moves.length === 0;
+        updateReplayControls();
+      }
+
+      function chooseBotMove() {
+        const difficulty = optionById(data.difficulties, state.difficultyId, data.settings.defaultDifficultyId);
+        const empty = emptyCells();
+        if (empty.length === 0) return null;
+        if (empty.length === state.boardSize * state.boardSize) {
+          return centerMove();
+        }
+        const candidates = candidateCells(difficulty.searchRadius);
+        if (Math.random() < difficulty.randomMoveChance) {
+          return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        const immediateWin = findImmediateWin(BOT, candidates);
+        if (immediateWin) return immediateWin;
+        const immediateBlock = findImmediateWin(HUMAN, candidates);
+        if (immediateBlock) return immediateBlock;
+
+        const scored = candidates.map((move) => ({
+          move,
+          score: scoreMove(move.row, move.col, BOT, difficulty)
+        }));
+        scored.sort((a, b) => b.score - a.score);
+        const topCount = Math.max(1, Math.min(difficulty.topCandidateCount, scored.length));
+        const top = scored.slice(0, topCount);
+        const best = top[0].score;
+        const close = top.filter((item) => item.score >= best * 0.92);
+        return close[Math.floor(Math.random() * close.length)].move;
+      }
+
+      function findImmediateWin(player, candidates) {
+        for (const move of candidates) {
+          state.board[move.row][move.col] = player;
+          const wins = getWinningCells(move.row, move.col, player).length >= state.winLength;
+          state.board[move.row][move.col] = EMPTY;
+          if (wins) return move;
+        }
+        return null;
+      }
+
+      function scoreMove(row, col, player, difficulty) {
+        state.board[row][col] = player;
+        const attack = evaluatePoint(row, col, player);
+        state.board[row][col] = EMPTY;
+
+        const opponent = player === BOT ? HUMAN : BOT;
+        state.board[row][col] = opponent;
+        const defense = evaluatePoint(row, col, opponent);
+        state.board[row][col] = EMPTY;
+
+        const center = centerBonus(row, col) * difficulty.centerBias;
+        return attack * difficulty.attackWeight + defense * difficulty.defenseWeight + center;
+      }
+
+      function evaluatePoint(row, col, player) {
+        let total = 0;
+        for (const [dx, dy] of directions) {
+          const forward = countRun(row, col, dx, dy, player);
+          const backward = countRun(row, col, -dx, -dy, player);
+          const length = 1 + forward.count + backward.count;
+          const openEnds = Number(forward.open) + Number(backward.open);
+          total += patternScore(length, openEnds);
+        }
+        return total;
+      }
+
+      function countRun(row, col, dx, dy, player) {
+        let count = 0;
+        let r = row + dy;
+        let c = col + dx;
+        while (isInside(r, c) && state.board[r][c] === player) {
+          count += 1;
+          r += dy;
+          c += dx;
+        }
+        return { count, open: isInside(r, c) && state.board[r][c] === EMPTY };
+      }
+
+      function patternScore(length, openEnds) {
+        if (length >= state.winLength) return 1000000;
+        if (length === state.winLength - 1 && openEnds === 2) return 110000;
+        if (length === state.winLength - 1 && openEnds === 1) return 42000;
+        if (length === state.winLength - 2 && openEnds === 2) return 9000;
+        if (length === state.winLength - 2 && openEnds === 1) return 1800;
+        if (length === state.winLength - 3 && openEnds === 2) return 600;
+        if (length === state.winLength - 3 && openEnds === 1) return 140;
+        return Math.max(2, length * length * (openEnds + 1));
+      }
+
+      function candidateCells(radius) {
+        const candidates = new Map();
+        for (let row = 0; row < state.boardSize; row += 1) {
+          for (let col = 0; col < state.boardSize; col += 1) {
+            if (state.board[row][col] === EMPTY) continue;
+            for (let dr = -radius; dr <= radius; dr += 1) {
+              for (let dc = -radius; dc <= radius; dc += 1) {
+                const r = row + dr;
+                const c = col + dc;
+                if (isInside(r, c) && state.board[r][c] === EMPTY) {
+                  candidates.set(key(r, c), { row: r, col: c });
+                }
+              }
+            }
+          }
+        }
+        return candidates.size > 0 ? Array.from(candidates.values()) : [centerMove()];
+      }
+
+      function emptyCells() {
+        const cells = [];
+        for (let row = 0; row < state.boardSize; row += 1) {
+          for (let col = 0; col < state.boardSize; col += 1) {
+            if (state.board[row][col] === EMPTY) cells.push({ row, col });
+          }
+        }
+        return cells;
+      }
+
+      function centerMove() {
+        const middle = Math.floor(state.boardSize / 2);
+        return { row: middle, col: middle };
+      }
+
+      function centerBonus(row, col) {
+        const middle = (state.boardSize - 1) / 2;
+        const distance = Math.abs(row - middle) + Math.abs(col - middle);
+        return Math.max(0, 100 - distance * 8);
+      }
+
+      function isInside(row, col) {
+        return row >= 0 && row < state.boardSize && col >= 0 && col < state.boardSize;
+      }
+
+      function key(row, col) {
+        return `${row}:${col}`;
+      }
+
+      async function saveCurrentGame() {
+        if (state.exporting) return;
+        state.exporting = true;
+        els.saveButton.disabled = true;
+        els.saveButton.setAttribute("aria-busy", "true");
+        els.saveButton.textContent = "导出中…";
+
+        try {
+          const savedAt = new Date().toISOString();
+          const payload = buildExportPayload(savedAt);
+          const json = JSON.stringify(payload, null, 2);
+          const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+          const fileName = createFileName(savedAt);
+
+          setIoStatus(window.parent === window
+            ? `浏览器直开，正在下载 · ${fileName}`
+            : `正在保存到 Sessio · web/exports/${fileName}`, false);
+
+          let bridgeResult;
+          try {
+            bridgeResult = await writeExportToSessio(json, fileName);
+          } catch (error) {
+            bridgeResult = { ok: false, error: error && error.message ? error.message : String(error) };
+          }
+
+          if (bridgeResult.ok) {
+            const relativePath = bridgeResult.relativePath || `exports/${fileName}`;
+            setIoStatus(`Sessio 已保存 web/${relativePath} · ${payload.game.moves.length} 手 · ${formatBytes(blob.size)}`, false);
+            return;
+          }
+
+          const bridgeStatus = bridgeResult.unavailable
+            ? "Sessio 文件桥不可用"
+            : `Sessio 保存失败：${bridgeResult.error || "未知错误"}`;
+          setIoStatus(`${bridgeStatus}；正在回退到浏览器下载 · ${fileName}`, !bridgeResult.unavailable);
+
+          try {
+            downloadBlob(blob, fileName);
+            const prefix = bridgeResult.unavailable
+              ? "浏览器直开，已下载"
+              : `${bridgeStatus}；已回退到浏览器下载`;
+            setIoStatus(`${prefix} ${fileName} · ${payload.game.moves.length} 手 · ${formatBytes(blob.size)}`, false);
+          } catch (error) {
+            const browserError = error && error.message ? error.message : String(error);
+            setIoStatus(`${bridgeStatus}；浏览器下载也失败：${browserError}`, true);
+          }
+        } catch (error) {
+          const message = error && error.message ? error.message : String(error);
+          setIoStatus(`无法生成导出快照：${message}`, true);
+        } finally {
+          state.exporting = false;
+          els.saveButton.disabled = false;
+          els.saveButton.removeAttribute("aria-busy");
+          els.saveButton.textContent = "导出棋局";
+        }
+      }
+
+      function handleImportSelection() {
+        const file = els.importInput.files && els.importInput.files[0];
+        els.importInput.value = "";
+        if (!file) return;
+        if (file.size > MAX_IMPORT_BYTES) {
+          setIoStatus(`导入失败：文件不能超过 ${formatBytes(MAX_IMPORT_BYTES)}。`, true);
+          return;
+        }
+        setIoStatus("正在读取棋局文件…", false);
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const raw = JSON.parse(String(reader.result || ""));
+            const game = normalizeReplayGame(raw);
+            enterReplay(game);
+          } catch (error) {
+            const message = error && error.message ? error.message : String(error);
+            setIoStatus(`导入失败：${message}`, true);
+          }
+        };
+        reader.onerror = () => {
+          setIoStatus("导入失败：无法读取文件。", true);
+        };
+        reader.readAsText(file, "utf-8");
+      }
+
+      if (!isValidData(data)) {
+        renderError();
+        return;
+      }
+
+      if (new URLSearchParams(window.location.search).get("gomoku-debug") === "1") {
+        window.__GOMOKU_BOT_TEST__ = {
+          importJson(jsonText) {
+            const raw = JSON.parse(jsonText);
+            const game = normalizeReplayGame(raw);
+            enterReplay(game);
+            return {
+              moves: state.moves.length,
+              replayStep: state.replayStep,
+              statusMain: els.statusMain.textContent,
+              statusSub: els.statusSub.textContent
+            };
+          },
+          exportJson() {
+            return JSON.stringify(buildExportPayload(), null, 2);
+          }
+        };
+      }
+
+      renderShell();
+      state.liveSnapshot = cloneLiveState();
+      updateReplayControls();
+    })();
+  </script>
+</body>
+</html>

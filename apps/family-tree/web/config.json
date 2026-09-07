@@ -1,0 +1,11 @@
+{
+  "nameZh": "家谱树",
+  "nameEn": "Family Tree",
+  "description": "离线展示家谱树、人物关系和人物详情，遵循 Sessio 明暗主题契约。",
+  "category": "Life",
+  "topics": ["家谱", "人物关系", "数据可视化"],
+  "author": "Alex",
+  "email": "alex@example.com",
+  "version": "1.4.0",
+  "permissions": ["downloads"]
+}

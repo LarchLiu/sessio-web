@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Case Report Trends</title>
+  <script src="./case-report-trends-data.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f9fc;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #697386;
+      --line: #e6ebf2;
+      --line-strong: #d8e0eb;
+      --accent: #2f6fed;
+      --danger: #d94b4b;
+      --shadow: 0 12px 32px rgba(20, 35, 60, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    main {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 18px 18px 30px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    select, input[type="search"] {
+      appearance: none;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--text);
+      padding: 8px 10px;
+      min-height: 34px;
+      font: inherit;
+    }
+
+    input[type="search"] { min-width: 230px; }
+
+    .chart-card { padding: 14px 16px 4px; }
+
+    .chart-scroll { overflow-x: auto; }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-width: 940px;
+      height: 420px;
+    }
+
+    .axis text, .grid text { fill: #6f7786; font-size: 11px; }
+    .grid line { stroke: #e8edf4; stroke-width: 1; }
+    .axis line { stroke: #bfc8d6; stroke-width: 1; }
+    .series-line { fill: none; stroke-width: 2; }
+    .point { stroke: white; stroke-width: 1.4; cursor: pointer; }
+    .point:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .date-guide { stroke: #aeb8c5; stroke-width: 1; stroke-dasharray: 4 4; pointer-events: none; }
+    .hover-zone { fill: transparent; pointer-events: all; cursor: crosshair; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px 16px;
+      padding: 8px 0 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      padding: 2px 4px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .legend button[aria-pressed="false"] { opacity: 0.36; }
+    .swatch {
+      width: 14px;
+      height: 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .tooltip {
+      position: fixed;
+      z-index: 4;
+      max-width: 320px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      background: rgba(20, 28, 42, 0.94);
+      color: white;
+      font-size: 12px;
+      line-height: 1.5;
+      pointer-events: none;
+      transform: translate(12px, -10px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+    }
+
+    .table-card { margin-top: 14px; overflow: hidden; }
+    .table-wrap { overflow: auto; max-height: 62vh; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1080px;
+      font-size: 13px;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #fbfcfe;
+      color: #4a5668;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid var(--line);
+      padding: 12px 18px;
+      white-space: nowrap;
+    }
+    tbody td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 18px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    tbody tr:hover { background: #fbfdff; }
+    tbody tr.row-abnormal { background: #fff1f1; }
+    tbody tr.row-abnormal:hover { background: #ffe7e7; }
+    .value { font-variant-numeric: tabular-nums; font-weight: 650; }
+    .flag-abnormal { color: var(--danger); font-weight: 700; text-align: center; }
+    .flag-normal { color: #91a0b3; text-align: center; }
+    .empty {
+      padding: 34px 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 760px) {
+      main { padding: 12px; }
+      .header { align-items: stretch; flex-direction: column; }
+      .controls { justify-content: stretch; }
+      .controls label, input[type="search"], select { width: 100%; }
+      input[type="search"] { min-width: 0; }
+      svg { min-width: 760px; height: 360px; }
+      .chart-card { padding: 12px 10px 2px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="header">
+      <div>
+        <h1 id="app-title">Case Report Trends</h1>
+        <p class="subtitle" id="app-subtitle"></p>
+      </div>
+      <form class="controls" aria-label="筛选报告记录">
+        <label>医院
+          <select id="hospital-filter" aria-label="按医院筛选"></select>
+        </label>
+        <label>指标
+          <select id="marker-filter" aria-label="按指标筛选"></select>
+        </label>
+        <label>搜索
+          <input id="search" type="search" placeholder="报告日期、医院、项目名" autocomplete="off">
+        </label>
+      </form>
+    </div>
+
+    <section class="card chart-card" aria-labelledby="chart-title">
+      <h2 id="chart-title" class="sr-only">指标趋势图</h2>
+      <div id="chart-empty" class="empty" hidden></div>
+      <div class="chart-scroll">
+        <svg id="chart" role="img" aria-label="Case report trends line chart"></svg>
+      </div>
+      <div id="legend" class="legend" aria-label="图例"></div>
+    </section>
+
+    <section class="card table-card" aria-labelledby="table-title">
+      <h2 id="table-title" class="sr-only">报告明细表</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>报告日期</th>
+              <th>医院</th>
+              <th>中文名称</th>
+              <th>英文名称</th>
+              <th>值</th>
+              <th>单位</th>
+              <th>范围</th>
+              <th>提示</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div id="table-empty" class="empty" hidden></div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const source = window.CASE_REPORT_TRENDS_DATA;
+      const state = { hospital: 'all', marker: 'all', query: '', hiddenSeries: new Set() };
+      const els = {
+        title: document.getElementById('app-title'),
+        subtitle: document.getElementById('app-subtitle'),
+        hospital: document.getElementById('hospital-filter'),
+        marker: document.getElementById('marker-filter'),
+        search: document.getElementById('search'),
+        chart: document.getElementById('chart'),
+        chartEmpty: document.getElementById('chart-empty'),
+        legend: document.getElementById('legend'),
+        rows: document.getElementById('rows'),
+        tableEmpty: document.getElementById('table-empty')
+      };
+
+      function isValidRecord(record) {
+        return record && typeof record.reportedAt === 'string' && typeof record.hospital === 'string' &&
+          typeof record.chineseName === 'string' && typeof record.englishName === 'string' &&
+          Number.isFinite(record.value) && typeof record.unit === 'string' && typeof record.range === 'string';
+      }
+
+      function normalizeMarker(name) {
+        const compact = String(name || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (compact === 'CA199' || compact === 'CA1999') return 'CA199';
+        return compact;
+      }
+
+      function parseTime(value) {
+        return new Date(String(value).replace(' ', 'T')).getTime();
+      }
+
+      function formatDate(value) {
+        return String(value).slice(0, 10);
+      }
+
+      function isAbnormalFlag(flag) {
+        return flag === 'high' || flag === 'low';
+      }
+
+      function flagSymbol(flag) {
+        if (flag === 'high') return '↑';
+        if (flag === 'low') return '↓';
+        return '';
+      }
+
+      function flagAriaLabel(flag) {
+        if (flag === 'high') return '高于参考范围';
+        if (flag === 'low') return '低于参考范围';
+        return '正常';
+      }
+
+      function clear(node) {
+        while (node.firstChild) node.removeChild(node.firstChild);
+      }
+
+      function appendOption(select, value, label) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        select.appendChild(option);
+      }
+
+      function showFatal(message) {
+        els.chart.hidden = true;
+        els.legend.hidden = true;
+        els.chartEmpty.hidden = false;
+        els.chartEmpty.textContent = message;
+        els.tableEmpty.hidden = false;
+        els.tableEmpty.textContent = message;
+      }
+
+      if (!source || source.schemaVersion !== 1 || !Array.isArray(source.records) || !Array.isArray(source.series)) {
+        showFatal('未找到有效数据。请检查 case-report-trends-data.js 中的 window.CASE_REPORT_TRENDS_DATA。');
+        return;
+      }
+
+      const records = source.records.filter(isValidRecord).map((record, index) => ({
+        ...record,
+        id: index,
+        markerKey: normalizeMarker(record.englishName),
+        time: parseTime(record.reportedAt)
+      })).filter(record => Number.isFinite(record.time));
+
+      const seriesByKey = new Map(source.series.map(item => [normalizeMarker(item.key), item]));
+      for (const record of records) {
+        if (!seriesByKey.has(record.markerKey)) {
+          seriesByKey.set(record.markerKey, { key: record.markerKey, label: record.englishName, color: '#7b8794', unit: record.unit, visible: true });
+        }
+      }
+      const series = Array.from(seriesByKey.values()).map(item => ({ ...item, key: normalizeMarker(item.key) }));
+      series.forEach(item => {
+        if (item.visible === false) state.hiddenSeries.add(item.key);
+      });
+
+      els.title.textContent = source.meta && source.meta.title ? source.meta.title : 'Case Report Trends';
+      els.subtitle.textContent = source.meta && source.meta.subtitle ? source.meta.subtitle : '';
+
+      function initControls() {
+        appendOption(els.hospital, 'all', '全部医院');
+        [...new Set(records.map(record => record.hospital))].sort((a, b) => a.localeCompare(b, 'zh-CN')).forEach(name => appendOption(els.hospital, name, name));
+        appendOption(els.marker, 'all', '全部指标');
+        series.forEach(item => appendOption(els.marker, item.key, item.label));
+        els.hospital.addEventListener('change', () => { state.hospital = els.hospital.value; render(); });
+        els.marker.addEventListener('change', () => { state.marker = els.marker.value; render(); });
+        els.search.addEventListener('input', () => { state.query = els.search.value.trim().toLowerCase(); render(); });
+      }
+
+      function filteredRecords() {
+        return records.filter(record => {
+          if (state.hospital !== 'all' && record.hospital !== state.hospital) return false;
+          if (state.marker !== 'all' && record.markerKey !== state.marker) return false;
+          if (!state.query) return true;
+          const haystack = [record.reportedAt, record.hospital, record.chineseName, record.englishName, record.unit, record.range].join(' ').toLowerCase();
+          return haystack.includes(state.query);
+        }).sort((a, b) => a.time - b.time || a.markerKey.localeCompare(b.markerKey));
+      }
+
+      function createSvgElement(name) {
+        return document.createElementNS('http://www.w3.org/2000/svg', name);
+      }
+
+      function setAttrs(el, attrs) {
+        Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, String(value)));
+        return el;
+      }
+
+      function renderChart(data) {
+        clear(els.chart);
+        const drawable = data.filter(record => !state.hiddenSeries.has(record.markerKey));
+        if (!drawable.length) {
+          els.chart.hidden = true;
+          els.chartEmpty.hidden = false;
+          els.chartEmpty.textContent = data.length ? '所有可见指标已隐藏。点击图例恢复。' : '没有符合筛选条件的记录。';
+          return;
+        }
+        els.chart.hidden = false;
+        els.chartEmpty.hidden = true;
+
+        const width = 1280;
+        const height = 430;
+        const margin = { top: 20, right: 34, bottom: 112, left: 56 };
+        const plotW = width - margin.left - margin.right;
+        const plotH = height - margin.top - margin.bottom;
+        const minTime = Math.min(...drawable.map(record => record.time));
+        const maxTime = Math.max(...drawable.map(record => record.time));
+        const maxValue = Math.max(1, ...drawable.map(record => record.value));
+        const yMax = Math.ceil(maxValue / 50) * 50;
+        const timeSpan = Math.max(1, maxTime - minTime);
+        const x = time => margin.left + ((time - minTime) / timeSpan) * plotW;
+        const y = value => margin.top + plotH - (value / yMax) * plotH;
+
+        setAttrs(els.chart, { viewBox: `0 0 ${width} ${height}`, 'aria-label': `${source.meta.title}: ${drawable.length} records` });
+
+        const grid = createSvgElement('g');
+        grid.setAttribute('class', 'grid');
+        const ticks = 5;
+        for (let i = 0; i <= ticks; i += 1) {
+          const value = (yMax / ticks) * i;
+          const yy = y(value);
+          grid.appendChild(setAttrs(createSvgElement('line'), { x1: margin.left, y1: yy, x2: width - margin.right, y2: yy }));
+          const text = setAttrs(createSvgElement('text'), { x: margin.left - 10, y: yy + 4, 'text-anchor': 'end' });
+          text.textContent = String(Math.round(value));
+          grid.appendChild(text);
+        }
+        els.chart.appendChild(grid);
+        const yLabel = setAttrs(createSvgElement('text'), { x: 16, y: margin.top + plotH / 2, transform: `rotate(-90 16 ${margin.top + plotH / 2})`, 'text-anchor': 'middle' });
+        yLabel.textContent = source.meta && source.meta.yAxisLabel ? source.meta.yAxisLabel : '值';
+        grid.appendChild(yLabel);
+
+        const axis = createSvgElement('g');
+        axis.setAttribute('class', 'axis');
+        axis.appendChild(setAttrs(createSvgElement('line'), { x1: margin.left, y1: margin.top + plotH, x2: width - margin.right, y2: margin.top + plotH }));
+        const recordsByDate = new Map();
+        drawable.forEach(record => {
+          const key = formatDate(record.reportedAt);
+          if (!recordsByDate.has(key)) recordsByDate.set(key, []);
+          recordsByDate.get(key).push(record);
+        });
+        const dateBuckets = Array.from(recordsByDate, ([date, items]) => ({
+          date,
+          records: items.slice().sort((a, b) => a.markerKey.localeCompare(b.markerKey) || a.time - b.time),
+          time: items.reduce((sum, item) => sum + item.time, 0) / items.length
+        })).sort((a, b) => a.time - b.time);
+        const step = Math.max(1, Math.ceil(dateBuckets.length / 11));
+        dateBuckets.forEach((bucket, index) => {
+          if (index % step !== 0 && index !== dateBuckets.length - 1) return;
+          const xx = x(bucket.time);
+          axis.appendChild(setAttrs(createSvgElement('line'), { x1: xx, y1: margin.top + plotH, x2: xx, y2: margin.top + plotH + 5 }));
+          const text = setAttrs(createSvgElement('text'), { x: xx - 4, y: margin.top + plotH + 32, transform: `rotate(-45 ${xx - 4} ${margin.top + plotH + 32})`, 'text-anchor': 'end' });
+          text.textContent = bucket.date;
+          axis.appendChild(text);
+        });
+        els.chart.appendChild(axis);
+        const xLabel = setAttrs(createSvgElement('text'), { x: margin.left + plotW / 2, y: height - 14, 'text-anchor': 'middle' });
+        xLabel.textContent = source.meta && source.meta.xAxisLabel ? source.meta.xAxisLabel : '报告日期';
+        axis.appendChild(xLabel);
+
+        const grouped = new Map();
+        drawable.forEach(record => {
+          if (!grouped.has(record.markerKey)) grouped.set(record.markerKey, []);
+          grouped.get(record.markerKey).push(record);
+        });
+
+        for (const [key, points] of grouped) {
+          points.sort((a, b) => a.time - b.time);
+          const meta = seriesByKey.get(key) || { color: '#7b8794', label: key };
+          if (points.length > 1) {
+            const path = createSvgElement('path');
+            const d = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${x(point.time).toFixed(2)} ${y(point.value).toFixed(2)}`).join(' ');
+            setAttrs(path, { d, class: 'series-line', stroke: meta.color || '#7b8794' });
+            els.chart.appendChild(path);
+          }
+          for (const point of points) {
+            const circle = setAttrs(createSvgElement('circle'), { cx: x(point.time), cy: y(point.value), r: 4, fill: meta.color || '#7b8794', class: 'point', tabindex: 0, role: 'img', 'aria-label': `${point.reportedAt} ${point.englishName} ${point.value} ${point.unit}` });
+            const bucket = dateBuckets.find(item => item.date === formatDate(point.reportedAt));
+            const show = event => showDateTooltip(event, bucket || { date: formatDate(point.reportedAt), records: [point] });
+            circle.addEventListener('focus', show);
+            circle.addEventListener('blur', hideTooltip);
+            els.chart.appendChild(circle);
+          }
+        }
+
+        const guide = setAttrs(createSvgElement('line'), { class: 'date-guide', x1: margin.left, y1: margin.top, x2: margin.left, y2: margin.top + plotH, visibility: 'hidden' });
+        els.chart.appendChild(guide);
+        const hoverZone = setAttrs(createSvgElement('rect'), { class: 'hover-zone', x: margin.left, y: margin.top, width: plotW, height: plotH });
+        hoverZone.addEventListener('pointermove', event => {
+          const point = els.chart.createSVGPoint();
+          point.x = event.clientX;
+          point.y = event.clientY;
+          const svgPoint = point.matrixTransform(els.chart.getScreenCTM().inverse());
+          const svgX = Math.max(margin.left, Math.min(width - margin.right, svgPoint.x));
+          const nearest = dateBuckets.reduce((best, bucket) => Math.abs(x(bucket.time) - svgX) < Math.abs(x(best.time) - svgX) ? bucket : best, dateBuckets[0]);
+          const xx = x(nearest.time);
+          setAttrs(guide, { x1: xx, x2: xx, visibility: 'visible' });
+          showDateTooltip(event, nearest);
+        });
+        hoverZone.addEventListener('pointerleave', () => {
+          setAttrs(guide, { visibility: 'hidden' });
+          hideTooltip();
+        });
+        els.chart.appendChild(hoverZone);
+      }
+
+      let tooltip;
+      function showDateTooltip(event, bucket) {
+        if (!tooltip) {
+          tooltip = document.createElement('div');
+          tooltip.className = 'tooltip';
+          document.body.appendChild(tooltip);
+        }
+        tooltip.innerHTML = '';
+        const hospitals = [...new Set(bucket.records.map(record => record.hospital))].join(' / ');
+        const title = document.createElement('div');
+        title.textContent = hospitals ? `${hospitals} · ${bucket.date}` : bucket.date;
+        tooltip.appendChild(title);
+        for (const record of bucket.records) {
+          const line = document.createElement('div');
+          const meta = seriesByKey.get(record.markerKey) || { color: '#7b8794', label: record.englishName };
+          line.textContent = `${meta.label || record.englishName}: ${record.value} ${record.unit}${flagSymbol(record.flag) ? ` ${flagSymbol(record.flag)}` : ''}`;
+          line.style.color = meta.color || '#ffffff';
+          tooltip.appendChild(line);
+        }
+        const targetBox = event.currentTarget && event.currentTarget.getBoundingClientRect ? event.currentTarget.getBoundingClientRect() : null;
+        const pointer = event.touches ? event.touches[0] : event;
+        const clientX = Number.isFinite(pointer.clientX) ? pointer.clientX : (targetBox ? targetBox.left + targetBox.width / 2 : 8);
+        const clientY = Number.isFinite(pointer.clientY) ? pointer.clientY : (targetBox ? targetBox.top + targetBox.height / 2 : 8);
+        tooltip.style.left = `${Math.min(window.innerWidth - 280, Math.max(8, clientX))}px`;
+        tooltip.style.top = `${Math.min(window.innerHeight - 90, Math.max(8, clientY))}px`;
+      }
+
+      function hideTooltip() {
+        if (tooltip) tooltip.remove();
+        tooltip = null;
+      }
+
+      function renderLegend() {
+        clear(els.legend);
+        series.forEach(item => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.setAttribute('aria-pressed', String(!state.hiddenSeries.has(item.key)));
+          button.addEventListener('click', () => {
+            if (state.hiddenSeries.has(item.key)) state.hiddenSeries.delete(item.key);
+            else state.hiddenSeries.add(item.key);
+            render();
+          });
+          const swatch = document.createElement('span');
+          swatch.className = 'swatch';
+          swatch.style.background = item.color || '#7b8794';
+          const label = document.createElement('span');
+          label.textContent = item.label;
+          button.append(swatch, label);
+          els.legend.appendChild(button);
+        });
+      }
+
+      function renderTable(data) {
+        clear(els.rows);
+        els.tableEmpty.hidden = data.length > 0;
+        els.tableEmpty.textContent = data.length ? '' : '没有符合筛选条件的记录。';
+        for (const record of data) {
+          const tr = document.createElement('tr');
+          if (isAbnormalFlag(record.flag)) tr.className = 'row-abnormal';
+          const cells = [record.reportedAt, record.hospital, record.chineseName, record.englishName, record.value, record.unit, record.range];
+          for (const cell of cells) {
+            const td = document.createElement('td');
+            td.textContent = String(cell);
+            if (cell === record.value) td.className = 'value';
+            tr.appendChild(td);
+          }
+          const flag = document.createElement('td');
+          flag.className = isAbnormalFlag(record.flag) ? 'flag-abnormal' : 'flag-normal';
+          flag.textContent = flagSymbol(record.flag);
+          flag.setAttribute('aria-label', flagAriaLabel(record.flag));
+          tr.appendChild(flag);
+          els.rows.appendChild(tr);
+        }
+      }
+
+      function render() {
+        const data = filteredRecords();
+        renderChart(data);
+        renderLegend();
+        renderTable(data.slice().sort((a, b) => a.time - b.time));
+      }
+
+      initControls();
+      render();
+    }());
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "nameZh": "病例报告趋势",
+  "nameEn": "Case Report Trends",
+  "description": "离线查看肿瘤标志物报告趋势和明细表。",
+  "category": "Medical",
+  "topics": ["健康记录", "趋势分析", "数据可视化"],
+  "author": "Alex",
+  "email": "alex@example.com",
+  "version": "1.0.0"
+}

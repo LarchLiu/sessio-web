@@ -1,0 +1,1686 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>家谱树</title>
+  <script src="./family-tree-data.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --app-bg: var(--sessio-chat-background, #f6f6f4);
+      --app-fg: #1f232b;
+      --app-muted: #64748b;
+      --app-surface: #fcfcfa;
+      --app-surface-soft: #f2f5fa;
+      --app-border: rgba(31, 35, 43, 0.12);
+      --app-border-strong: rgba(31, 35, 43, 0.24);
+      --app-accent: #2764d8;
+      --app-accent-soft: #eaf1ff;
+      --app-female: #b84a72;
+      --app-male: #2764d8;
+      --app-other: #7b8494;
+      --app-shadow: 0 14px 30px rgba(19, 34, 58, 0.08);
+      --app-topbar-bg: rgba(252, 252, 250, 0.94);
+      --app-workspace-bg: var(--app-bg);
+      --app-workspace-dots: rgba(137, 150, 171, 0.22);
+      --app-button-hover-bg: #f9fbff;
+      --app-card-shadow: 0 7px 16px rgba(29, 42, 64, 0.08);
+      --app-match-bg: #fff8e8;
+      --app-match-border: #d69b2d;
+      --app-other-bg: #f6f7f9;
+      --app-other-text: #586174;
+      --app-badge-family-border: #c9d8ff;
+      --app-badge-family-bg: var(--app-accent-soft);
+      --app-badge-family-text: #214eab;
+      --app-bio-text: #394457;
+      --app-error-bg: #fff8f8;
+      --app-error-border: #e4a7a7;
+      --app-error-text: #8a2d2d;
+      --app-mini-bg: rgba(255, 255, 255, 0.9);
+      --app-side-overlay: rgba(255, 255, 255, 0.96);
+
+      --bg: var(--app-bg);
+      --panel: var(--app-surface);
+      --panel-soft: var(--app-surface-soft);
+      --text: var(--app-fg);
+      --muted: var(--app-muted);
+      --line: var(--app-border);
+      --line-strong: var(--app-border-strong);
+      --accent: var(--app-accent);
+      --accent-soft: var(--app-accent-soft);
+      --female: var(--app-female);
+      --male: var(--app-male);
+      --other: var(--app-other);
+      --shadow: var(--app-shadow);
+      --topbar-bg: var(--app-topbar-bg);
+      --workspace-bg: var(--app-workspace-bg);
+      --workspace-dots: var(--app-workspace-dots);
+      --button-hover-bg: var(--app-button-hover-bg);
+      --card-shadow: var(--app-card-shadow);
+      --match-bg: var(--app-match-bg);
+      --match-border: var(--app-match-border);
+      --other-bg: var(--app-other-bg);
+      --other-text: var(--app-other-text);
+      --badge-family-border: var(--app-badge-family-border);
+      --badge-family-bg: var(--app-badge-family-bg);
+      --badge-family-text: var(--app-badge-family-text);
+      --bio-text: var(--app-bio-text);
+      --error-bg: var(--app-error-bg);
+      --error-border: var(--app-error-border);
+      --error-text: var(--app-error-text);
+      --mini-bg: var(--app-mini-bg);
+      --side-overlay: var(--app-side-overlay);
+    }
+
+    :root[data-sessio-theme="dark"] {
+      color-scheme: dark;
+      --app-bg: var(--sessio-chat-background, #232831);
+      --app-fg: #e8edf7;
+      --app-muted: #a2afc0;
+      --app-surface: #171d28;
+      --app-surface-soft: #1c2431;
+      --app-border: rgba(232, 237, 247, 0.12);
+      --app-border-strong: rgba(232, 237, 247, 0.24);
+      --app-accent: #7aa4ff;
+      --app-accent-soft: #1c2d4e;
+      --app-female: #ff769f;
+      --app-male: #7aa4ff;
+      --app-other: #92a0b2;
+      --app-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+      --app-topbar-bg: rgba(23, 29, 40, 0.92);
+      --app-workspace-bg: var(--app-bg);
+      --app-workspace-dots: rgba(78, 92, 114, 0.22);
+      --app-button-hover-bg: #212938;
+      --app-card-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+      --app-match-bg: #2b2415;
+      --app-match-border: #b07a21;
+      --app-other-bg: #1b222d;
+      --app-other-text: #a8b2c0;
+      --app-badge-family-border: #314a7b;
+      --app-badge-family-bg: #1c2d4e;
+      --app-badge-family-text: #9fbbff;
+      --app-bio-text: #ced7e4;
+      --app-error-bg: #2a181a;
+      --app-error-border: #7d3c42;
+      --app-error-text: #ffb5bc;
+      --app-mini-bg: rgba(18, 24, 33, 0.92);
+      --app-side-overlay: rgba(18, 24, 33, 0.96);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-sessio-theme]) {
+        color-scheme: dark;
+        --app-bg: #232831;
+        --app-fg: #e8edf7;
+        --app-muted: #a2afc0;
+        --app-surface: #171d28;
+        --app-surface-soft: #1c2431;
+        --app-border: rgba(232, 237, 247, 0.12);
+        --app-border-strong: rgba(232, 237, 247, 0.24);
+        --app-accent: #7aa4ff;
+        --app-accent-soft: #1c2d4e;
+        --app-female: #ff769f;
+        --app-male: #7aa4ff;
+        --app-other: #92a0b2;
+        --app-shadow: 0 18px 40px rgba(0, 0, 0, 0.34);
+        --app-topbar-bg: rgba(23, 29, 40, 0.92);
+        --app-workspace-bg: var(--app-bg);
+        --app-workspace-dots: rgba(78, 92, 114, 0.22);
+        --app-button-hover-bg: #212938;
+        --app-card-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+        --app-match-bg: #2b2415;
+        --app-match-border: #b07a21;
+        --app-other-bg: #1b222d;
+        --app-other-text: #a8b2c0;
+        --app-badge-family-border: #314a7b;
+        --app-badge-family-bg: #1c2d4e;
+        --app-badge-family-text: #9fbbff;
+        --app-bio-text: #ced7e4;
+        --app-error-bg: #2a181a;
+        --app-error-border: #7d3c42;
+        --app-error-text: #ffb5bc;
+        --app-mini-bg: rgba(18, 24, 33, 0.92);
+        --app-side-overlay: rgba(18, 24, 33, 0.96);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 7px;
+      min-height: 34px;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--line-strong);
+      background: var(--button-hover-bg);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.58;
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      height: 100vh;
+      min-width: 320px;
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--topbar-bg);
+      box-shadow: 0 10px 22px rgba(20, 35, 60, 0.06);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .export-status {
+      flex: 1 0 100%;
+      min-height: 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+      text-align: right;
+    }
+
+    .export-status.error-text {
+      color: var(--error-text);
+    }
+
+    .field {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .field input[type="search"], .field select {
+      height: 34px;
+      min-width: 116px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+      color: var(--text);
+      padding: 0 9px;
+      outline: none;
+    }
+
+    .field input[type="search"] {
+      width: min(260px, 28vw);
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(39, 100, 216, 0.13);
+    }
+
+    .toggle {
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+    }
+
+    .toggle input {
+      margin: 0;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .shell.no-detail {
+      grid-template-columns: 1fr;
+    }
+
+    .shell.no-detail .side {
+      display: none;
+    }
+
+    .workspace {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle, var(--workspace-dots) 1px, transparent 1px) 0 0 / 16px 16px,
+        var(--workspace-bg);
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .workspace,
+    .workspace * {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .canvas {
+      position: absolute;
+      width: 1600px;
+      height: 1200px;
+      will-change: left, top;
+    }
+
+    .canvas-inner {
+      position: absolute;
+      inset: 0;
+      transform-origin: 0 0;
+      will-change: zoom;
+    }
+
+    .links {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    .links path, .links line {
+      fill: none;
+      stroke: var(--line-strong);
+      stroke-width: 1.5;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .links .marriage-line {
+      stroke-dasharray: 4 4;
+      stroke: #9aa4b5;
+    }
+
+    .person {
+      position: absolute;
+      width: 104px;
+      min-height: 82px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: var(--panel);
+      box-shadow: var(--card-shadow);
+      color: var(--text);
+      padding: 0;
+      text-align: center;
+      overflow: hidden;
+      outline: none;
+    }
+
+    .person:hover, .person:focus-visible {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(39, 100, 216, 0.16), 0 7px 16px rgba(29, 42, 64, 0.08);
+    }
+
+    .person.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(39, 100, 216, 0.18), 0 12px 22px rgba(39, 100, 216, 0.16);
+    }
+
+    .person.match {
+      background: var(--match-bg);
+      border-color: var(--match-border);
+    }
+
+    .person.other-family {
+      background: var(--other-bg);
+      color: var(--other-text);
+      border-style: dashed;
+    }
+
+    .node-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 22px;
+      padding: 2px 5px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-soft);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .node-icons {
+      display: inline-flex;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .node-line {
+      min-height: 19px;
+      padding: 1px 5px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+      line-height: 17px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .node-name {
+      font-weight: 700;
+    }
+
+    .node-summary {
+      border-bottom: 0;
+      color: var(--text);
+    }
+
+    .gender-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: 1px;
+      background: var(--other);
+    }
+
+    .person[data-gender="male"] .gender-dot { background: var(--male); }
+    .person[data-gender="female"] .gender-dot { background: var(--female); }
+
+    .side {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      border-left: 1px solid var(--line);
+      background: var(--panel);
+      padding: 16px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 9px;
+      background: var(--panel-soft);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.15;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .detail {
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    .detail h2 {
+      margin: 0 0 4px;
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0 14px;
+    }
+
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .badge.family {
+      border-color: var(--badge-family-border);
+      background: var(--badge-family-bg);
+      color: var(--badge-family-text);
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+    }
+
+    .detail-row {
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      gap: 8px;
+      align-items: start;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .detail-row dt {
+      color: var(--muted);
+    }
+
+    .detail-row dd {
+      margin: 0;
+      min-width: 0;
+      word-break: break-word;
+    }
+
+    .bio {
+      margin: 14px 0 0;
+      color: var(--bio-text);
+      line-height: 1.65;
+    }
+
+    .empty, .error {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      max-width: 520px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      line-height: 1.6;
+    }
+
+    .error {
+      border-color: var(--error-border);
+      color: var(--error-text);
+      background: var(--error-bg);
+    }
+
+    .mini-map {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      z-index: 4;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--mini-bg);
+      padding: 8px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      box-shadow: 0 8px 18px rgba(20, 35, 60, 0.08);
+      pointer-events: none;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        overflow: hidden;
+      }
+
+      .app {
+        height: auto;
+        min-height: 100%;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .controls {
+        justify-content: flex-start;
+      }
+
+      .export-status {
+        text-align: left;
+      }
+
+      .field input[type="search"] {
+        width: 190px;
+      }
+
+      .shell {
+        grid-template-columns: 1fr;
+        position: relative;
+      }
+
+      .workspace {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .side {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: min(320px, calc(100vw - 24px));
+        border-left: 1px solid var(--line);
+        border-radius: 12px 0 0 12px;
+        background: var(--side-overlay);
+        box-shadow: 0 14px 32px rgba(19, 34, 58, 0.12);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .topbar {
+        padding: 12px;
+      }
+
+      .controls {
+        gap: 6px;
+      }
+
+      .field {
+        width: 100%;
+      }
+
+      .field input[type="search"], .field select {
+        flex: 1;
+        min-width: 0;
+      }
+
+      button {
+        flex: 1 1 auto;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1 id="appTitle">家谱树</h1>
+        <p class="subtitle" id="appSubtitle"></p>
+      </div>
+      <div class="controls" aria-label="家谱视图控制">
+        <label class="field">
+          搜索
+          <input id="searchInput" type="search" autocomplete="off" placeholder="姓名、ID、简介">
+        </label>
+        <label class="field">
+          代际
+          <select id="generationSelect"></select>
+        </label>
+        <label class="field toggle">
+          <input id="spouseToggle" type="checkbox" checked>
+          显示配偶
+        </label>
+        <button type="button" id="zoomOut" aria-label="缩小">-</button>
+        <button type="button" id="zoomIn" aria-label="放大">+</button>
+        <button type="button" id="fitView" class="primary">适配视图</button>
+        <button type="button" id="exportPng">保存截图</button>
+        <span class="export-status" id="exportStatus" role="status" aria-live="polite"></span>
+      </div>
+    </header>
+
+    <section class="shell">
+      <div class="workspace" id="workspace" aria-label="家谱树画布" tabindex="0">
+        <div class="canvas" id="canvas">
+          <div class="canvas-inner" id="canvasInner">
+            <svg class="links" id="links" aria-hidden="true"></svg>
+            <div id="nodes"></div>
+          </div>
+        </div>
+        <div class="mini-map" id="statusText" aria-live="polite"></div>
+      </div>
+
+      <aside class="side" aria-label="人物详情" hidden>
+        <section class="stats" id="stats"></section>
+        <section class="detail" id="detail"></section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var data = window.FAMILY_TREE_DATA;
+      var state = {
+        search: "",
+        generation: "all",
+        showSpouses: true,
+        selectedId: null,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+        dragging: null
+      };
+
+      var CARD_W = 104;
+      var CARD_H = 82;
+      var SPOUSE_GAP = 24;
+      var COL_GAP = 132;
+      var COL_GAP_WITH_SPOUSE = 260;
+      var ROW_GAP = 130;
+      var MARGIN_X = 90;
+      var MARGIN_Y = 62;
+      var lastLayout = null;
+
+      var el = {
+        title: document.getElementById("appTitle"),
+        subtitle: document.getElementById("appSubtitle"),
+        search: document.getElementById("searchInput"),
+        generation: document.getElementById("generationSelect"),
+        spouseToggle: document.getElementById("spouseToggle"),
+        zoomOut: document.getElementById("zoomOut"),
+        zoomIn: document.getElementById("zoomIn"),
+        fitView: document.getElementById("fitView"),
+        exportPng: document.getElementById("exportPng"),
+        exportStatus: document.getElementById("exportStatus"),
+        shell: document.querySelector(".shell"),
+        side: document.querySelector(".side"),
+        workspace: document.getElementById("workspace"),
+        canvas: document.getElementById("canvas"),
+        canvasInner: document.getElementById("canvasInner"),
+        links: document.getElementById("links"),
+        nodes: document.getElementById("nodes"),
+        stats: document.getElementById("stats"),
+        detail: document.getElementById("detail"),
+        status: document.getElementById("statusText")
+      };
+
+      function text(value) {
+        return value === null || value === undefined || value === "" ? "未填写" : String(value);
+      }
+
+      function generationText(value) {
+        var labels = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+        return labels[value] ? labels[value] + "世" : String(value) + "世";
+      }
+
+      function ordinalText(person) {
+        var labels = ["", "长", "次", "三", "四", "五", "六", "七", "八", "九", "十"];
+        var order = labels[person.ordinal] || String(person.ordinal);
+        if (person.isOtherFamily) return "配偶";
+        if (person.gender === "female") return order + "女";
+        if (person.gender === "male") return order + "子";
+        return order + "排行";
+      }
+
+      function genderText(value) {
+        if (value === "male") return "男";
+        if (value === "female") return "女";
+        return "其他";
+      }
+
+      function validate(input) {
+        if (!input || input.schemaVersion !== 1 || !Array.isArray(input.records)) {
+          return { ok: false, message: "缺少有效的 window.FAMILY_TREE_DATA。请检查 family-tree-data.js。" };
+        }
+        var seen = new Set();
+        for (var i = 0; i < input.records.length; i += 1) {
+          var p = input.records[i];
+          if (!p || (typeof p.id !== "string" && typeof p.id !== "number") || typeof p.name !== "string") {
+            return { ok: false, message: "records[" + i + "] 缺少有效的 id 或 name。" };
+          }
+          if (seen.has(String(p.id))) {
+            return { ok: false, message: "发现重复人物 ID：" + p.id };
+          }
+          seen.add(String(p.id));
+          if (typeof p.generation !== "number" || typeof p.ordinal !== "number") {
+            return { ok: false, message: p.name + " 的 generation 或 ordinal 必须是数字。" };
+          }
+        }
+        return { ok: true };
+      }
+
+      function normalizeRecords(records) {
+        return records.map(function (person) {
+          return {
+            id: person.id,
+            idKey: String(person.id),
+            name: person.name,
+            gender: person.gender || "unknown",
+            generation: person.generation,
+            ordinal: person.ordinal,
+            fatherId: person.fatherId === undefined ? null : person.fatherId,
+            motherId: person.motherId === undefined ? null : person.motherId,
+            birthdate: person.birthdate || "",
+            deathdate: person.deathdate || "",
+            biography: person.biography || "",
+            spouseIds: Array.isArray(person.spouseIds) ? person.spouseIds.slice() : [],
+            isOtherFamily: person.isOtherFamily === true
+          };
+        });
+      }
+
+      var validation = validate(data);
+      if (!validation.ok) {
+        renderError(validation.message);
+        return;
+      }
+
+      var people = normalizeRecords(data.records);
+      var byId = new Map(people.map(function (p) { return [p.idKey, p]; }));
+      var familyPeople = people.filter(function (p) { return !p.isOtherFamily; });
+      var generationValues = Array.from(new Set(familyPeople.map(function (p) { return p.generation; }))).sort(function (a, b) { return a - b; });
+      state.selectedId = null;
+
+      el.title.textContent = data.meta && data.meta.title ? data.meta.title : "家谱树";
+      el.subtitle.textContent = data.meta && data.meta.subtitle ? data.meta.subtitle : "按代际、父母关系和家庭排行展示家族成员。";
+
+      setupControls();
+      render();
+      window.setTimeout(fitView, 0);
+
+      function setupControls() {
+        var allOption = document.createElement("option");
+        allOption.value = "all";
+        allOption.textContent = "全部";
+        el.generation.appendChild(allOption);
+        generationValues.forEach(function (gen) {
+          var option = document.createElement("option");
+          option.value = String(gen);
+          option.textContent = generationText(gen);
+          el.generation.appendChild(option);
+        });
+
+        el.search.addEventListener("input", function () {
+          state.search = el.search.value.trim().toLowerCase();
+          var firstMatch = firstVisibleMatch();
+          if (firstMatch) state.selectedId = firstMatch.idKey;
+          render();
+        });
+        el.generation.addEventListener("change", function () {
+          state.generation = el.generation.value;
+          render();
+        });
+        el.spouseToggle.addEventListener("change", function () {
+          state.showSpouses = el.spouseToggle.checked;
+          render();
+        });
+        el.zoomOut.addEventListener("click", function () { setZoom(state.zoom - 0.1); });
+        el.zoomIn.addEventListener("click", function () { setZoom(state.zoom + 0.1); });
+        el.fitView.addEventListener("click", fitView);
+        el.exportPng.addEventListener("click", exportTreePng);
+        el.workspace.addEventListener("wheel", onWheel, { passive: false });
+        el.workspace.addEventListener("pointerdown", onPointerDown);
+        el.workspace.addEventListener("pointermove", onPointerMove);
+        el.workspace.addEventListener("pointerup", endDrag);
+        el.workspace.addEventListener("pointercancel", endDrag);
+        el.workspace.addEventListener("click", onWorkspaceClick);
+      }
+
+      function getLineageParent(person) {
+        var father = person.fatherId === null || person.fatherId === undefined ? null : byId.get(String(person.fatherId));
+        var mother = person.motherId === null || person.motherId === undefined ? null : byId.get(String(person.motherId));
+        if (father && !father.isOtherFamily) return father.idKey;
+        if (mother && !mother.isOtherFamily) return mother.idKey;
+        return null;
+      }
+
+      function comparePeople(a, b) {
+        if (a.generation !== b.generation) return a.generation - b.generation;
+        if (a.gender !== b.gender) {
+          if (a.gender === "female") return -1;
+          if (b.gender === "female") return 1;
+        }
+        if (a.ordinal !== b.ordinal) return a.ordinal - b.ordinal;
+        return a.name.localeCompare(b.name, "zh-CN");
+      }
+
+      function buildLayout() {
+        var visibleFamily = familyPeople.filter(function (p) {
+          return state.generation === "all" || String(p.generation) === state.generation;
+        });
+        var visibleIds = new Set(visibleFamily.map(function (p) { return p.idKey; }));
+        var childrenByParent = new Map();
+        visibleFamily.forEach(function (p) {
+          var parentId = getLineageParent(p);
+          if (!parentId || !visibleIds.has(parentId)) return;
+          if (!childrenByParent.has(parentId)) childrenByParent.set(parentId, []);
+          childrenByParent.get(parentId).push(p);
+        });
+        childrenByParent.forEach(function (children) { children.sort(comparePeople); });
+
+        var roots = visibleFamily.filter(function (p) {
+          var parentId = getLineageParent(p);
+          return !parentId || !visibleIds.has(parentId);
+        }).sort(comparePeople);
+        var visibleGenerations = Array.from(new Set(visibleFamily.map(function (p) { return p.generation; }))).sort(function (a, b) { return a - b; });
+        var generationRows = new Map(visibleGenerations.map(function (gen, index) { return [gen, index]; }));
+
+        var positions = new Map();
+        var cursor = 0;
+        var slotGap = state.showSpouses ? COL_GAP_WITH_SPOUSE : COL_GAP;
+
+        function place(person) {
+          var children = childrenByParent.get(person.idKey) || [];
+          if (children.length === 0) {
+            var leafX = MARGIN_X + cursor * slotGap;
+            cursor += 1;
+            positions.set(person.idKey, { x: leafX, y: MARGIN_Y + (generationRows.get(person.generation) || 0) * ROW_GAP });
+            return leafX;
+          }
+          var childXs = children.map(place);
+          var x = childXs.reduce(function (sum, value) { return sum + value; }, 0) / childXs.length;
+          positions.set(person.idKey, { x: x, y: MARGIN_Y + (generationRows.get(person.generation) || 0) * ROW_GAP });
+          return x;
+        }
+
+        roots.forEach(place);
+
+        var minX = Infinity;
+        var maxX = 0;
+        var maxY = 0;
+        positions.forEach(function (pos) {
+          minX = Math.min(minX, pos.x);
+          maxX = Math.max(maxX, pos.x + CARD_W);
+          maxY = Math.max(maxY, pos.y + CARD_H);
+        });
+
+        if (minX < MARGIN_X && Number.isFinite(minX)) {
+          var shift = MARGIN_X - minX;
+          positions.forEach(function (pos) { pos.x += shift; });
+          maxX += shift;
+        }
+
+        return {
+          visibleFamily: visibleFamily,
+          visibleIds: visibleIds,
+          childrenByParent: childrenByParent,
+          positions: positions,
+          width: Math.max(900, maxX + MARGIN_X + (state.showSpouses ? CARD_W + SPOUSE_GAP : 0)),
+          height: Math.max(620, maxY + MARGIN_Y)
+        };
+      }
+
+      function measureVisibleBounds(layout) {
+        var minX = Infinity;
+        var minY = Infinity;
+        var maxX = 0;
+        var maxY = 0;
+
+        layout.visibleFamily.forEach(function (person) {
+          var pos = layout.positions.get(person.idKey);
+          if (!pos) return;
+          minX = Math.min(minX, pos.x);
+          minY = Math.min(minY, pos.y);
+          maxX = Math.max(maxX, pos.x + CARD_W);
+          maxY = Math.max(maxY, pos.y + CARD_H);
+
+          if (state.showSpouses) {
+            visibleSpouses(person).forEach(function (spouse, index) {
+              var sx = pos.x + CARD_W + SPOUSE_GAP;
+              var sy = pos.y + index * (CARD_H + 14);
+              minX = Math.min(minX, sx);
+              minY = Math.min(minY, sy);
+              maxX = Math.max(maxX, sx + CARD_W);
+              maxY = Math.max(maxY, sy + CARD_H);
+            });
+          }
+        });
+
+        if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
+          return { minX: 0, minY: 0, maxX: layout.width, maxY: layout.height };
+        }
+
+        return { minX: minX, minY: minY, maxX: maxX, maxY: maxY };
+      }
+
+      function render() {
+        var layout = buildLayout();
+        lastLayout = layout;
+        el.canvas.style.width = layout.width + "px";
+        el.canvas.style.height = layout.height + "px";
+        el.canvasInner.style.width = layout.width + "px";
+        el.canvasInner.style.height = layout.height + "px";
+        el.links.setAttribute("viewBox", "0 0 " + layout.width + " " + layout.height);
+        el.links.setAttribute("width", String(layout.width));
+        el.links.setAttribute("height", String(layout.height));
+        el.nodes.textContent = "";
+        el.links.textContent = "";
+        applyViewTransform();
+
+        if (layout.visibleFamily.length === 0) {
+          var empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "当前代际下没有可显示的本族成员。请选择其他代际。";
+          el.nodes.appendChild(empty);
+          renderStats([]);
+          renderDetail(null);
+          return;
+        }
+
+        drawLinks(layout);
+        layout.visibleFamily.forEach(function (person) {
+          renderNode(person, layout.positions.get(person.idKey), false);
+          if (state.showSpouses) {
+            visibleSpouses(person).forEach(function (spouse, index) {
+              var base = layout.positions.get(person.idKey);
+              renderNode(spouse, {
+                x: base.x + CARD_W + SPOUSE_GAP,
+                y: base.y + index * (CARD_H + 14)
+              }, true);
+            });
+          }
+        });
+
+        renderStats(layout.visibleFamily);
+        if (state.selectedId && !layout.positions.has(state.selectedId)) {
+          state.selectedId = null;
+        }
+        renderDetail(state.selectedId ? byId.get(state.selectedId) : null);
+        updateStatus(layout.visibleFamily.length, layout.width, layout.height);
+      }
+
+      function firstVisibleMatch() {
+        if (!state.search) return null;
+        return familyPeople
+          .filter(function (p) { return state.generation === "all" || String(p.generation) === state.generation; })
+          .find(matchesSearch) || null;
+      }
+
+      function drawLinks(layout) {
+        layout.childrenByParent.forEach(function (children, parentId) {
+          var parentPos = layout.positions.get(parentId);
+          if (!parentPos || children.length === 0) return;
+          var startX = parentPos.x + CARD_W / 2;
+          var startY = parentPos.y + CARD_H;
+          var junctionY = startY + (ROW_GAP - CARD_H) / 2;
+          children.forEach(function (child) {
+            var childPos = layout.positions.get(child.idKey);
+            if (!childPos) return;
+            var endX = childPos.x + CARD_W / 2;
+            var endY = childPos.y;
+            appendPath("M " + startX + " " + startY + " V " + junctionY + " H " + endX + " V " + endY);
+          });
+        });
+
+        if (state.showSpouses) {
+          layout.visibleFamily.forEach(function (person) {
+            var spouses = visibleSpouses(person);
+            var pos = layout.positions.get(person.idKey);
+            if (!pos) return;
+            spouses.forEach(function (spouse, index) {
+              var y = pos.y + CARD_H / 2 + index * (CARD_H + 14);
+              appendLine(pos.x + CARD_W, y, pos.x + CARD_W + SPOUSE_GAP, y, "marriage-line");
+            });
+          });
+        }
+      }
+
+      function appendPath(d) {
+        var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", d);
+        el.links.appendChild(path);
+      }
+
+      function appendLine(x1, y1, x2, y2, className) {
+        var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(x1));
+        line.setAttribute("y1", String(y1));
+        line.setAttribute("x2", String(x2));
+        line.setAttribute("y2", String(y2));
+        if (className) line.setAttribute("class", className);
+        el.links.appendChild(line);
+      }
+
+      function visibleSpouses(person) {
+        return person.spouseIds
+          .map(function (id) { return byId.get(String(id)); })
+          .filter(function (spouse) { return spouse && spouse.isOtherFamily; });
+      }
+
+      function renderNode(person, pos, isSpouseNode) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "person" + (person.isOtherFamily ? " other-family" : "") + (String(person.idKey) === state.selectedId ? " selected" : "") + (matchesSearch(person) ? " match" : "");
+        button.style.left = pos.x + "px";
+        button.style.top = pos.y + "px";
+        button.dataset.id = person.idKey;
+        button.dataset.gender = person.gender;
+        button.setAttribute("aria-label", person.name + "，" + generationText(person.generation) + "，" + ordinalText(person));
+
+        var top = document.createElement("div");
+        top.className = "node-top";
+        var gen = document.createElement("span");
+        gen.textContent = generationText(person.generation);
+        top.appendChild(gen);
+        var icons = document.createElement("span");
+        icons.className = "node-icons";
+        icons.textContent = person.spouseIds.length > 0 ? "✎ ⛓" : "✎";
+        top.appendChild(icons);
+        button.appendChild(top);
+
+        addNodeLine(button, ordinalText(person), "");
+        addNodeLine(button, person.name, "node-name");
+        addNodeLine(button, isSpouseNode ? "外姓配偶" : childSummary(person.idKey), "node-summary");
+
+        button.addEventListener("click", function () {
+          state.selectedId = person.idKey;
+          render();
+          button.focus();
+        });
+        el.nodes.appendChild(button);
+      }
+
+      function addNodeLine(parent, value, extraClass) {
+        var div = document.createElement("div");
+        div.className = "node-line" + (extraClass ? " " + extraClass : "");
+        if (extraClass === "node-name") {
+          var dot = document.createElement("span");
+          dot.className = "gender-dot";
+          div.appendChild(dot);
+        }
+        div.appendChild(document.createTextNode(value));
+        parent.appendChild(div);
+      }
+
+      function childSummary(personId) {
+        var children = familyPeople.filter(function (p) { return getLineageParent(p) === personId; });
+        var sons = children.filter(function (p) { return p.gender === "male"; }).length;
+        var daughters = children.filter(function (p) { return p.gender === "female"; }).length;
+        if (sons === 0 && daughters === 0) return "无子女记录";
+        var parts = [];
+        if (sons > 0) parts.push(numberText(sons) + "男");
+        if (daughters > 0) parts.push(numberText(daughters) + "女");
+        return parts.join("");
+      }
+
+      function numberText(value) {
+        var labels = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+        return labels[value] || String(value);
+      }
+
+      function matchesSearch(person) {
+        if (!state.search) return false;
+        var haystack = [
+          person.name,
+          person.id,
+          person.gender,
+          person.generation,
+          person.ordinal,
+          person.birthdate,
+          person.deathdate,
+          person.biography
+        ].join(" ").toLowerCase();
+        return haystack.indexOf(state.search) !== -1;
+      }
+
+      function renderStats(visibleFamily) {
+        var spouses = people.filter(function (p) { return p.isOtherFamily; }).length;
+        var generations = new Set(familyPeople.map(function (p) { return p.generation; })).size;
+        el.stats.textContent = "";
+        [
+          { label: "本族成员", value: familyPeople.length },
+          { label: "配偶记录", value: spouses },
+          { label: "代际跨度", value: generations }
+        ].forEach(function (item) {
+          var div = document.createElement("div");
+          div.className = "stat";
+          var strong = document.createElement("strong");
+          strong.textContent = String(item.value);
+          var span = document.createElement("span");
+          span.textContent = item.label;
+          div.appendChild(strong);
+          div.appendChild(span);
+          el.stats.appendChild(div);
+        });
+
+      }
+
+      function renderDetail(person) {
+        var visible = !!person;
+        el.shell.classList.toggle("no-detail", !visible);
+        el.side.hidden = !visible;
+        el.detail.textContent = "";
+        if (!person) {
+          return;
+        }
+
+        var h2 = document.createElement("h2");
+        h2.textContent = person.name;
+        el.detail.appendChild(h2);
+
+        var badges = document.createElement("div");
+        badges.className = "badges";
+        addBadge(badges, generationText(person.generation), "family");
+        addBadge(badges, ordinalText(person), "");
+        addBadge(badges, genderText(person.gender), "");
+        addBadge(badges, person.isOtherFamily ? "外姓配偶" : "本族成员", person.isOtherFamily ? "" : "family");
+        el.detail.appendChild(badges);
+
+        var list = document.createElement("dl");
+        list.className = "detail-list";
+        addDetailRow(list, "ID", person.id);
+        addDetailRow(list, "父亲", relationName(person.fatherId));
+        addDetailRow(list, "母亲", relationName(person.motherId));
+        addDetailRow(list, "配偶", spouseNames(person));
+        addDetailRow(list, "出生", text(person.birthdate));
+        addDetailRow(list, "逝世", text(person.deathdate));
+        addDetailRow(list, "子女", childNames(person.idKey));
+        el.detail.appendChild(list);
+
+        var bio = document.createElement("p");
+        bio.className = "bio";
+        bio.textContent = person.biography || "暂无简介。";
+        el.detail.appendChild(bio);
+      }
+
+      function addBadge(parent, value, extraClass) {
+        var span = document.createElement("span");
+        span.className = "badge" + (extraClass ? " " + extraClass : "");
+        span.textContent = value;
+        parent.appendChild(span);
+      }
+
+      function addDetailRow(parent, label, value) {
+        var wrapper = document.createElement("div");
+        wrapper.className = "detail-row";
+        var dt = document.createElement("dt");
+        dt.textContent = label;
+        var dd = document.createElement("dd");
+        dd.textContent = text(value);
+        wrapper.appendChild(dt);
+        wrapper.appendChild(dd);
+        parent.appendChild(wrapper);
+      }
+
+      function relationName(id) {
+        if (id === null || id === undefined || id === "") return "未填写";
+        var person = byId.get(String(id));
+        return person ? person.name : String(id);
+      }
+
+      function spouseNames(person) {
+        if (person.spouseIds.length === 0) return "未填写";
+        return person.spouseIds.map(relationName).join("、");
+      }
+
+      function childNames(personId) {
+        var children = familyPeople
+          .filter(function (p) { return getLineageParent(p) === personId; })
+          .sort(comparePeople)
+          .map(function (p) { return p.name; });
+        return children.length ? children.join("、") : "无子女记录";
+      }
+
+      function updateStatus(count, width, height) {
+        el.status.textContent = "显示 " + count + " 人 · 缩放 " + Math.round(state.zoom * 100) + "% · 画布 " + width + "x" + height;
+      }
+
+      function applyViewTransform() {
+        el.canvasInner.style.zoom = String(state.zoom);
+        el.canvas.style.left = state.panX + "px";
+        el.canvas.style.top = state.panY + "px";
+        if (lastLayout) {
+          updateStatus(lastLayout.visibleFamily.length, lastLayout.width, lastLayout.height);
+        }
+      }
+
+      function fitView() {
+        var workspaceW = el.workspace.clientWidth || 1;
+        var workspaceH = el.workspace.clientHeight || 1;
+        var layout = lastLayout || buildLayout();
+        var bounds = measureVisibleBounds(layout);
+        var availableW = Math.max(1, workspaceW - 40);
+        var availableH = Math.max(1, workspaceH - 40);
+        var fitZoom = Math.min(2.5, Math.max(0.35, Math.min(availableW / (bounds.maxX - bounds.minX), availableH / (bounds.maxY - bounds.minY))));
+        var centerX = bounds.minX + (bounds.maxX - bounds.minX) / 2;
+        var centerY = bounds.minY + (bounds.maxY - bounds.minY) / 2;
+        if (state.selectedId && layout.positions.has(state.selectedId)) {
+          var selectedPos = layout.positions.get(state.selectedId);
+          centerX = selectedPos.x + CARD_W / 2;
+          centerY = selectedPos.y + CARD_H / 2;
+        }
+        state.zoom = Math.round(fitZoom * 1000) / 1000;
+        state.panX = (workspaceW / 2) - (centerX * state.zoom);
+        state.panY = (workspaceH / 2) - (centerY * state.zoom);
+        applyViewTransform();
+      }
+
+      function setZoom(next, anchorX, anchorY) {
+        var workspaceW = el.workspace.clientWidth || 1;
+        var workspaceH = el.workspace.clientHeight || 1;
+        var currentZoom = state.zoom;
+        var nextZoom = Math.max(0.25, Math.min(3, Math.round(next * 1000) / 1000));
+        if (nextZoom === currentZoom) return;
+        if (anchorX === undefined || anchorY === undefined) {
+          anchorX = workspaceW / 2;
+          anchorY = workspaceH / 2;
+        }
+        var worldX = (anchorX - state.panX) / currentZoom;
+        var worldY = (anchorY - state.panY) / currentZoom;
+        state.zoom = nextZoom;
+        state.panX = anchorX - (worldX * nextZoom);
+        state.panY = anchorY - (worldY * nextZoom);
+        applyViewTransform();
+      }
+
+      function onWheel(event) {
+        event.preventDefault();
+        var workspaceRect = el.workspace.getBoundingClientRect();
+        var localX = event.clientX - workspaceRect.left;
+        var localY = event.clientY - workspaceRect.top;
+        var factor = event.deltaY > 0 ? 0.9 : 1.1;
+        setZoom(state.zoom * factor, localX, localY);
+      }
+
+      function onPointerDown(event) {
+        if (event.button !== 0) return;
+        if (event.target.closest("button, input, select, label")) return;
+        state.dragging = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          startPanX: state.panX,
+          startPanY: state.panY
+        };
+        el.workspace.setPointerCapture(event.pointerId);
+        el.workspace.style.cursor = "grabbing";
+      }
+
+      function onPointerMove(event) {
+        if (!state.dragging || event.pointerId !== state.dragging.pointerId) return;
+        state.panX = state.dragging.startPanX + (event.clientX - state.dragging.startX);
+        state.panY = state.dragging.startPanY + (event.clientY - state.dragging.startY);
+        applyViewTransform();
+      }
+
+      function onWorkspaceClick(event) {
+        if (event.target.closest && event.target.closest(".person")) return;
+        if (event.target.closest && event.target.closest("button, input, select, label")) return;
+        if (state.dragging) return;
+        if (state.selectedId === null) return;
+        state.selectedId = null;
+        render();
+      }
+
+      function endDrag(event) {
+        if (!state.dragging) return;
+        if (event && event.pointerId !== state.dragging.pointerId) return;
+        try {
+          el.workspace.releasePointerCapture(state.dragging.pointerId);
+        } catch (err) {}
+        state.dragging = null;
+        el.workspace.style.cursor = "grab";
+      }
+
+      function exportTreePng() {
+        if (!lastLayout) {
+          setExportState(false, "家族树尚未完成布局，无法保存。", true);
+          return;
+        }
+
+        setExportState(true, "正在生成完整家族树截图…", false);
+        Promise.resolve().then(function () {
+          var canvas = renderTreeToCanvas(lastLayout);
+          return canvasToPngBlob(canvas).then(function (blob) {
+            return { blob: blob, width: canvas.width, height: canvas.height };
+          });
+        }).then(function (exported) {
+          var blob = exported.blob;
+          if (blob.size > 25 * 1024 * 1024) {
+            throw new Error("截图超过 25 MiB，请减少显示内容后重试。");
+          }
+          var fileName = createScreenshotFileName();
+          var summary = exported.width + "×" + exported.height + " · " + formatFileSize(blob.size);
+          if (window.parent !== window) {
+            var relativePath = "screenshots/" + fileName;
+            return saveBlobThroughSessio(blob, relativePath).then(function () {
+              setExportState(false, "已保存到 web/" + relativePath + " · " + summary, false);
+            });
+          }
+          downloadBlob(blob, fileName);
+          setExportState(false, "已下载 " + fileName + " · " + summary, false);
+        }).catch(function (error) {
+          var message = error && error.message ? error.message : String(error);
+          setExportState(false, "截图保存失败：" + message, true);
+        });
+      }
+
+      function renderTreeToCanvas(layout) {
+        var width = Math.ceil(layout.width);
+        var height = Math.ceil(layout.height);
+        var maxPixels = 12000000;
+        var scale = Math.min(2, Math.sqrt(maxPixels / Math.max(1, width * height)));
+        var canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.floor(width * scale));
+        canvas.height = Math.max(1, Math.floor(height * scale));
+        var context = canvas.getContext("2d");
+        if (!context) throw new Error("浏览器不支持 Canvas 截图。");
+        var colors = getExportColors();
+        context.scale(scale, scale);
+        drawExportBackground(context, width, height, colors);
+        drawExportLinks(context, layout, colors);
+        layout.visibleFamily.forEach(function (person) {
+          var position = layout.positions.get(person.idKey);
+          if (!position) return;
+          drawExportNode(context, person, position, false, colors);
+          if (state.showSpouses) {
+            visibleSpouses(person).forEach(function (spouse, index) {
+              drawExportNode(context, spouse, {
+                x: position.x + CARD_W + SPOUSE_GAP,
+                y: position.y + index * (CARD_H + 14)
+              }, true, colors);
+            });
+          }
+        });
+        return canvas;
+      }
+
+      function getExportColors() {
+        return {
+          background: resolveCssColor("--workspace-bg", "#f6f6f4"),
+          dots: resolveCssColor("--workspace-dots", "rgba(137, 150, 171, 0.22)"),
+          panel: resolveCssColor("--panel", "#fcfcfa"),
+          panelSoft: resolveCssColor("--panel-soft", "#f2f5fa"),
+          text: resolveCssColor("--text", "#1f232b"),
+          muted: resolveCssColor("--muted", "#64748b"),
+          line: resolveCssColor("--line", "rgba(31, 35, 43, 0.12)"),
+          lineStrong: resolveCssColor("--line-strong", "rgba(31, 35, 43, 0.24)"),
+          accent: resolveCssColor("--accent", "#2764d8"),
+          matchBackground: resolveCssColor("--match-bg", "#fff8e8"),
+          matchBorder: resolveCssColor("--match-border", "#d69b2d"),
+          otherBackground: resolveCssColor("--other-bg", "#f6f7f9"),
+          otherText: resolveCssColor("--other-text", "#586174"),
+          male: resolveCssColor("--male", "#2764d8"),
+          female: resolveCssColor("--female", "#b84a72"),
+          other: resolveCssColor("--other", "#7b8494")
+        };
+      }
+
+      function resolveCssColor(variableName, fallback) {
+        var probe = document.createElement("span");
+        probe.style.color = "var(" + variableName + ", " + fallback + ")";
+        probe.style.display = "none";
+        document.body.appendChild(probe);
+        var color = getComputedStyle(probe).color || fallback;
+        probe.remove();
+        return color;
+      }
+
+      function drawExportBackground(context, width, height, colors) {
+        context.fillStyle = colors.background;
+        context.fillRect(0, 0, width, height);
+        context.fillStyle = colors.dots;
+        for (var x = 0; x < width; x += 16) {
+          for (var y = 0; y < height; y += 16) {
+            context.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+
+      function drawExportLinks(context, layout, colors) {
+        context.save();
+        context.strokeStyle = colors.lineStrong;
+        context.lineWidth = 1.5;
+        context.setLineDash([]);
+        layout.childrenByParent.forEach(function (children, parentId) {
+          var parentPosition = layout.positions.get(parentId);
+          if (!parentPosition) return;
+          var startX = parentPosition.x + CARD_W / 2;
+          var startY = parentPosition.y + CARD_H;
+          var junctionY = startY + (ROW_GAP - CARD_H) / 2;
+          children.forEach(function (child) {
+            var childPosition = layout.positions.get(child.idKey);
+            if (!childPosition) return;
+            context.beginPath();
+            context.moveTo(startX, startY);
+            context.lineTo(startX, junctionY);
+            context.lineTo(childPosition.x + CARD_W / 2, junctionY);
+            context.lineTo(childPosition.x + CARD_W / 2, childPosition.y);
+            context.stroke();
+          });
+        });
+        if (state.showSpouses) {
+          context.strokeStyle = "#9aa4b5";
+          context.setLineDash([4, 4]);
+          layout.visibleFamily.forEach(function (person) {
+            var position = layout.positions.get(person.idKey);
+            if (!position) return;
+            visibleSpouses(person).forEach(function (_spouse, index) {
+              var y = position.y + CARD_H / 2 + index * (CARD_H + 14);
+              context.beginPath();
+              context.moveTo(position.x + CARD_W, y);
+              context.lineTo(position.x + CARD_W + SPOUSE_GAP, y);
+              context.stroke();
+            });
+          });
+        }
+        context.restore();
+      }
+
+      function drawExportNode(context, person, position, isSpouseNode, colors) {
+        var isOther = person.isOtherFamily;
+        var isMatch = matchesSearch(person);
+        var isSelected = person.idKey === state.selectedId;
+        var background = isOther ? colors.otherBackground : (isMatch ? colors.matchBackground : colors.panel);
+        var border = isSelected ? colors.accent : (isMatch && !isOther ? colors.matchBorder : colors.lineStrong);
+        var textColor = isOther ? colors.otherText : colors.text;
+        context.save();
+        roundedRect(context, position.x, position.y, CARD_W, CARD_H, 6);
+        context.fillStyle = background;
+        context.fill();
+        context.strokeStyle = border;
+        context.lineWidth = isSelected ? 2 : 1;
+        context.setLineDash(isOther ? [4, 3] : []);
+        context.stroke();
+        context.clip();
+
+        context.fillStyle = colors.panelSoft;
+        context.fillRect(position.x, position.y, CARD_W, 22);
+        context.strokeStyle = colors.line;
+        context.lineWidth = 1;
+        context.setLineDash([]);
+        [22, 41, 60].forEach(function (offset) {
+          context.beginPath();
+          context.moveTo(position.x, position.y + offset);
+          context.lineTo(position.x + CARD_W, position.y + offset);
+          context.stroke();
+        });
+
+        var fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif';
+        context.textBaseline = "middle";
+        context.fillStyle = textColor;
+        context.font = "700 12px " + fontFamily;
+        context.textAlign = "left";
+        context.fillText(generationText(person.generation), position.x + 5, position.y + 11, 58);
+        context.fillStyle = colors.muted;
+        context.textAlign = "right";
+        context.fillText(person.spouseIds.length > 0 ? "✎ ⛓" : "✎", position.x + CARD_W - 5, position.y + 11, 34);
+
+        context.fillStyle = textColor;
+        context.textAlign = "center";
+        context.font = "13px " + fontFamily;
+        context.fillText(ordinalText(person), position.x + CARD_W / 2, position.y + 31.5, CARD_W - 10);
+        context.font = "700 13px " + fontFamily;
+        context.fillText(person.name, position.x + CARD_W / 2 + 4, position.y + 50.5, CARD_W - 22);
+        context.beginPath();
+        context.fillStyle = person.gender === "male" ? colors.male : (person.gender === "female" ? colors.female : colors.other);
+        context.arc(position.x + 14, position.y + 50.5, 3.5, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = textColor;
+        context.font = "13px " + fontFamily;
+        context.fillText(isSpouseNode ? "外姓配偶" : childSummary(person.idKey), position.x + CARD_W / 2, position.y + 71, CARD_W - 10);
+        context.restore();
+      }
+
+      function roundedRect(context, x, y, width, height, radius) {
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.lineTo(x + width - radius, y);
+        context.quadraticCurveTo(x + width, y, x + width, y + radius);
+        context.lineTo(x + width, y + height - radius);
+        context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        context.lineTo(x + radius, y + height);
+        context.quadraticCurveTo(x, y + height, x, y + height - radius);
+        context.lineTo(x, y + radius);
+        context.quadraticCurveTo(x, y, x + radius, y);
+        context.closePath();
+      }
+
+      function canvasToPngBlob(canvas) {
+        return new Promise(function (resolve, reject) {
+          canvas.toBlob(function (blob) {
+            if (blob) resolve(blob);
+            else reject(new Error("浏览器无法生成 PNG 文件。"));
+          }, "image/png");
+        });
+      }
+
+      function createScreenshotFileName() {
+        var stamp = new Date().toISOString().replace(/\D/g, "").slice(0, 17);
+        return "family-tree-" + stamp + ".png";
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KiB";
+        return (bytes / (1024 * 1024)).toFixed(1) + " MiB";
+      }
+
+      function blobToBase64(blob) {
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            var result = typeof reader.result === "string" ? reader.result : "";
+            var comma = result.indexOf(",");
+            if (comma < 0) reject(new Error("无法编码截图文件。"));
+            else resolve(result.slice(comma + 1));
+          };
+          reader.onerror = function () { reject(new Error("无法读取截图文件。")); };
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      function saveBlobThroughSessio(blob, relativePath) {
+        return blobToBase64(blob).then(function (base64) {
+          return new Promise(function (resolve, reject) {
+            var requestId = "family-tree-screenshot-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+            var timeoutId = window.setTimeout(function () {
+              window.removeEventListener("message", onResult);
+              reject(new Error("Sessio 保存响应超时。"));
+            }, 15000);
+
+            function onResult(event) {
+              var message = event.data;
+              if (event.source !== window.parent || !message || message.source !== "sessio") return;
+              if (message.type !== "sessio-app-write-file-result" || message.requestId !== requestId) return;
+              window.clearTimeout(timeoutId);
+              window.removeEventListener("message", onResult);
+              if (message.ok) resolve(message);
+              else reject(new Error(message.error || "Sessio 无法保存截图。"));
+            }
+
+            window.addEventListener("message", onResult);
+            window.parent.postMessage({
+              source: "sessio-app",
+              type: "sessio-app-write-file",
+              requestId: requestId,
+              path: relativePath,
+              data: base64,
+              encoding: "base64",
+              overwrite: false
+            }, "*");
+          });
+        });
+      }
+
+      function downloadBlob(blob, fileName) {
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      }
+
+      function setExportState(busy, message, isError) {
+        el.exportPng.disabled = busy;
+        el.exportPng.setAttribute("aria-busy", busy ? "true" : "false");
+        el.exportPng.textContent = busy ? "生成中…" : "保存截图";
+        el.exportStatus.textContent = message;
+        el.exportStatus.classList.toggle("error-text", isError === true);
+      }
+
+      function cssEscape(value) {
+        if (window.CSS && typeof window.CSS.escape === "function") return window.CSS.escape(value);
+        return String(value).replace(/"/g, '\\"');
+      }
+
+      function renderError(message) {
+        el.nodes.textContent = "";
+        var error = document.createElement("div");
+        error.className = "error";
+        error.textContent = message;
+        el.nodes.appendChild(error);
+        el.status.textContent = "数据错误";
+      }
+    })();
+  </script>
+</body>
+</html>

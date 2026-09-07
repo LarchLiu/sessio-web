@@ -1,0 +1,5 @@
+dist/
+staged/
+public/generated/
+node_modules/
+*.local
