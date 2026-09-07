@@ -186,7 +186,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .cover-label { position: absolute; right: 10px; bottom: 9px; padding: 5px 7px; background: rgba(23, 26, 32, .78); color: #f2eee6; font-family: var(--mono); font-size: 8px; letter-spacing: .06em; }
 .app-cover-mark { display: grid; height: 100%; place-items: center; position: relative; overflow: hidden; color: #f4efe5; font-family: var(--mono); font-size: 30px; }
 .app-cover-mark i { position: absolute; right: 19%; bottom: 16%; width: 48px; height: 48px; border: 1px solid rgba(255, 255, 255, .42); transform: rotate(45deg); }
-.mark-case-report-trends { background: #38536c; }.mark-family-tree { background: #374c79; }.mark-gomoku-bot { background: #3c654e; }.mark-infinite-garden { background: #4b6852; }
+.mark-case-report-trends { background: #38536c; }.mark-family-tree { background: #374c79; }.mark-gomoku-bot { background: #3c654e; }
 .app-card-content { display: flex; flex: 1; flex-direction: column; width: 100%; min-width: 0; padding: 18px 18px 17px; }
 .app-card-title { display: flex; align-items: center; gap: 11px; }
 .app-logo, .detail-logo { display: grid; flex: 0 0 40px; width: 40px; height: 40px; place-items: center; overflow: hidden; border: 1px solid var(--line-strong); background: var(--surface-alt); }

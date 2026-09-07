@@ -10,7 +10,7 @@ const search = (filters) => filterApps(apps, { ...defaults, ...filters }).map((a
 
 test("searches app identity, author, category, and topics without case sensitivity", () => {
   assert.deepEqual(search({ query: "  MeDiCaL  " }), ["case-report-trends"]);
-  assert.deepEqual(search({ query: "3d" }), ["infinite-garden"]);
+  assert.deepEqual(search({ query: "goMoku" }), ["gomoku-bot"]);
   assert.deepEqual(search({ query: "family-tree" }), ["family-tree"]);
   assert.deepEqual(search({ query: "Family Tree" }), ["family-tree"]);
   assert.equal(search({ query: "alex" }).length, apps.length);
@@ -20,15 +20,16 @@ test("searches app identity, author, category, and topics without case sensitivi
 });
 
 test("combines multiple search terms across metadata fields", () => {
-  assert.deepEqual(search({ query: " games \t 3D\nAlex " }), ["infinite-garden"]);
+  assert.deepEqual(search({ query: " games \t Bot\nAlex " }), ["gomoku-bot"]);
   assert.deepEqual(search({ query: "Games Medical" }), []);
   assert.equal(search({ query: " \n\t " }).length, apps.length);
 });
 
 test("combines category, topic, permission, and keyword filters", () => {
-  assert.deepEqual(search({ category: "Games" }), ["gomoku-bot", "infinite-garden"]);
-  assert.deepEqual(search({ category: "Games", topic: "3D", permission: "downloads", query: "Garden" }), ["infinite-garden"]);
-  assert.deepEqual(search({ category: "Medical", topic: "3D" }), []);
+  const topic = apps.find((app) => app.slug === "gomoku-bot").topics[0];
+  assert.deepEqual(search({ category: "Games" }), ["gomoku-bot"]);
+  assert.deepEqual(search({ category: "Games", topic, permission: "downloads", query: "Gomoku" }), ["gomoku-bot"]);
+  assert.deepEqual(search({ category: "Medical", topic }), []);
   assert.deepEqual(search({ category: "Life", permission: "pointerLock" }), []);
   assert.equal(search(defaults).length, apps.length);
 });

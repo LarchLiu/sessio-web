@@ -68,7 +68,6 @@ test("loads the checked-in app catalog contract", () => {
     "case-report-trends",
     "family-tree",
     "gomoku-bot",
-    "infinite-garden",
   ]);
   assert.ok(apps.find((app) => app.slug === "family-tree").screenshots.length >= 1);
   assert.ok(apps.every((app) => app.files.every((file) => !file.startsWith("web/screenshots/"))));
