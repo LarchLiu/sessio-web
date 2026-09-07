@@ -60,7 +60,7 @@ export function filterApps(apps: AppCatalogEntry[], filters: CatalogFilters): Ap
 }
 
 export async function loadCatalog(): Promise<AppCatalog> {
-  const response = await fetch(`${import.meta.env.BASE_URL}generated/catalog.json`, {
+  const response = await fetch(assetUrl("generated/catalog.json"), {
     headers: { Accept: "application/json" },
   });
   if (!response.ok) throw new Error(`catalog request failed (${response.status})`);
@@ -71,8 +71,9 @@ export async function loadCatalog(): Promise<AppCatalog> {
   return catalog;
 }
 
-export function assetUrl(relativePath: string): string {
-  return `${import.meta.env.BASE_URL}${relativePath}`;
+export function assetUrl(relativePath: string, baseUrl = import.meta.env.BASE_URL): string {
+  const base = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  return `${base}${relativePath.replace(/^\/+/, "")}`;
 }
 
 export function formatBytes(bytes: number): string {
